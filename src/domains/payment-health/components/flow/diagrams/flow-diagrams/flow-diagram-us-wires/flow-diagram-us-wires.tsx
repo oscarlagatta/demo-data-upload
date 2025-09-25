@@ -606,6 +606,7 @@ const Flow = ({
     </div>
   )
 }
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -614,16 +615,21 @@ const queryClient = new QueryClient({
     },
   },
 })
+
+const createNodeTypes = (onHideSearch: () => void): NodeTypes => ({
+  custom: (props) => <CustomNodeUsWires {...props} onHideSearch={onHideSearch} />,
+  background: SectionBackgroundNode,
+})
+
 export function FlowDiagramUsWires() {
   const { showAmountSearchResults, amountSearchParams, hideAmountResults } = useTransactionSearchUsWiresContext()
   const [showSearchBox, setShowSearchBox] = useState(true)
+
   const nodeTypes: NodeTypes = useMemo(
-    () => ({
-      custom: (props) => <CustomNodeUsWires {...props} onHideSearch={() => setShowSearchBox((prev) => !prev)} />,
-      background: SectionBackgroundNode,
-    }),
-    [],
+    () => createNodeTypes(() => setShowSearchBox((prev) => !prev)),
+    [], // Empty dependency array since the callback doesn't depend on external values
   )
+
   return (
     <QueryClientProvider client={queryClient}>
       <ReactFlowProvider>
