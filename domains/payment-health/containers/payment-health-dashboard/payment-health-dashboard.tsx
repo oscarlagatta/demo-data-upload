@@ -1,4 +1,4 @@
-import ServiceTable from "@/domains/payment-health/components/tables/service-table/service-table"
+import ServiceTable from "@/src/domains/payment-health/components/tables/service-table/service-table"
 
 function PaymentHealthDashboard() {
   return (

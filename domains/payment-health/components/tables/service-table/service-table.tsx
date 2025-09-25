@@ -1,4 +1,3 @@
-// checked
 "use client"
 import { useMemo, useState } from "react"
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model"
@@ -13,9 +12,9 @@ import { AlertTriangle } from "lucide-react"
 
 import { Skeleton } from "@/components/ui/skeleton"
 
-import { useServices } from "@/domains/payment-health/hooks/hooks"
-import ExpandableCharts from "@/domains/payment-health/components/flow/nodes/expandable-charts/section-background-node"
-import StatusIcon from "@/domains/payment-health/components/indicators/status-indicator/status-indicator"
+import { useServices } from "@/src/domains/payment-health/hooks/hooks"
+import SectionBackgroundNode from "@/src/domains/payment-health/components/flow/nodes/expandable-charts/section-background-node"
+import StatusIndicator from "@/src/domains/payment-health/components/indicators/status-indicator/status-indicator"
 
 interface ServiceStatus {
   id: string
@@ -32,7 +31,7 @@ const StatusCellRenderer = (props: ICellRendererParams) => {
   if (!props.value) return null
   return (
     <div className="flex h-full items-center justify-center">
-      <StatusIcon status={props.value} />
+      <StatusIndicator status={props.value} />
     </div>
   )
 }
@@ -112,7 +111,7 @@ const ServiceTable = () => {
   ])
 
   const detailCellRenderer = useMemo(() => {
-    return ExpandableCharts
+    return SectionBackgroundNode
   }, [])
 
   if (isLoading) {
