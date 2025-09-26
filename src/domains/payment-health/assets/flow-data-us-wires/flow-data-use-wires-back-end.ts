@@ -10,7 +10,7 @@ export function useFlowDataBackEnd() {
   const {
     data: flowData,
     isLoading,
-    error,
+    isError, // Use isError instead of error for consistency
   } = useGetSplunkWiresFlow({
     enabled: true,
     isMonitored: false,
@@ -74,7 +74,7 @@ export function useFlowDataBackEnd() {
     nodes: transformedData.nodes,
     edges: transformedData.edges,
     isLoading,
-    error,
+    isError, // Return isError instead of error
     backgroundNodes,
     sectionPositions,
     sectionTimings,
