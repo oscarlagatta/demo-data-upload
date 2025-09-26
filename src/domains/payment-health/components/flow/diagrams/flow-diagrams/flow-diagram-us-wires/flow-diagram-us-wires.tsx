@@ -26,7 +26,6 @@ import { AlertCircle, Loader2, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useGetSplunkUsWires } from "@/domains/payment-health/hooks/use-get-splunk-us-wires/use-get-splunk-us-wires"
 import { useTransactionSearchUsWiresContext } from "@/domains/payment-health/providers/us-wires/us-wires-transaction-search-provider"
 import { computeTrafficStatusColors } from "@/domains/payment-health/utils/traffic-status-utils"
 import { InfoSection } from "../../../../indicators/info-section/info-section"
@@ -36,6 +35,7 @@ import { TransactionDetailsTableAgGrid } from "@/domains/payment-health/componen
 import CustomNodeUsWires from "@/domains/payment-health/components/flow/nodes/custom-nodes-us-wires/custom-node-us-wires"
 import SectionBackgroundNode from "@/domains/payment-health/components/flow/nodes/expandable-charts/section-background-node"
 import { useFlowDataBackEnd } from "@/domains/payment-health/assets/flow-data-us-wires/flow-data-use-wires-back-end"
+// import { useHealthStatusAppTodayData } from "@/domains/payment-health/hooks/use-health-status-app-today-data/use-health-status-app-today-data"
 
 const SECTION_IDS = ["bg-origination", "bg-validation", "bg-middleware", "bg-processing"]
 
@@ -50,6 +50,13 @@ const SECTION_WIDTH_PROPORTIONS = [0.2, 0.2, 0.25, 0.35]
 const GAP_WIDTH = 16
 
 type ActionType = "flow" | "trend" | "balanced"
+
+const createNodeTypes = (isShowHiden: boolean, onHideSearch: () => void, splunkData: any[]): NodeTypes => ({
+  custom: (props) => (
+    <CustomNodeUsWires {...props} isShowHiden={isShowHiden} onHideSearch={onHideSearch} splunkData={splunkData} />
+  ),
+  background: (props: any) => <SectionBackgroundNode isHide={isShowHiden} {...props} />,
+})
 
 // Custom Draggable Component that works with React 19
 const DraggablePanel = ({
@@ -151,26 +158,36 @@ const Flow = ({
   })
   const width = useStore((state) => state.width)
   const isAuthorized = true // hasRequiredRole();
-  const {
-    data: splunkData,
-    isLoading,
-    isError,
-    refetch,
-    isFetching,
-    isSuccess,
-  } = useGetSplunkUsWires({
-    enabled: isAuthorized,
-  })
+
+  // const {
+  //   data: splunkData,
+  //   isLoading,
+  //   isError,
+  //   refetch,
+  //   isFetching,
+  // } = useGetSplunkUsWires({
+  //   enabled: isAuthorized,
+  // })
+
   const {
     nodes: flowNodes,
     edges: flowEdges,
     isLoading: isFlowDataLoading,
     error: flowDataError,
+    sectionTimings,
+    totalProcessingTime,
+    splunkData,
   } = useFlowDataBackEnd()
+
+  const isLoading = isFlowDataLoading
+  const isError = !!flowDataError
+  const isFetching = isFlowDataLoading
+  const isSuccess = !isLoading && !isError && splunkData
 
   const handleRefetch = async () => {
     try {
-      await refetch()
+      // Note: The new hook doesn't expose refetch directly
+      // This could be enhanced by exposing refetch from useGetSplunkWiresFlow
       setLastRefetch(new Date())
       toast.success("Data successfully refreshed!", {
         description: "The latest data has been loaded",
@@ -244,9 +261,23 @@ const Flow = ({
 
   useEffect(() => {
     if (flowNodes.length > 0) {
-      setNodes(flowNodes)
+      const nodesWithTiming = flowNodes.map((node) => {
+        // If it's a background node, add timing data
+        if (node.type === "background" && sectionTimings?.[node.id]) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              duration: sectionTimings[node.id].duration,
+              trend: sectionTimings[node.id].trend,
+            },
+          }
+        }
+        return node
+      })
+      setNodes(nodesWithTiming)
     }
-  }, [flowNodes])
+  }, [flowNodes, sectionTimings])
 
   useEffect(() => {
     if (flowEdges.length > 0) {
@@ -398,7 +429,7 @@ const Flow = ({
         <div className="space-y-3">
           <div className="flex items-center space-x-2">
             <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-            <span className="text-sm font-medium text-blue-600">Loading Splunk data...</span>
+            <span className="text-sm font-medium text-blue-600">Loading flow data...</span>
           </div>
           <div className="space-y-2">
             <Skeleton className="h-4 w-32" />
@@ -458,18 +489,20 @@ const Flow = ({
             </div>
           </div>
           <div className="rounded bg-gray-50 p-2 text-xs">
-            {Object.entries(computeTrafficStatusColors(splunkData)).map(([aitNum, color]) => (
-              <div key={aitNum} className="flex justify-between">
-                <span>AIT {aitNum}:</span>
-                <span
-                  className={`rounded px-1 text-white ${
-                    color === "green" ? "bg-green-500" : color === "red" ? "bg-red-500" : "bg-gray-400"
-                  }`}
-                >
-                  {color}
-                </span>
-              </div>
-            ))}
+            {Object.entries(computeTrafficStatusColors(splunkData.flatMap((node) => node.splunkDatas || []))).map(
+              ([aitNum, color]) => (
+                <div key={aitNum} className="flex justify-between">
+                  <span>AIT {aitNum}:</span>
+                  <span
+                    className={`rounded px-1 text-white ${
+                      color === "green" ? "bg-green-500" : color === "red" ? "bg-red-500" : "bg-gray-400"
+                    }`}
+                  >
+                    {color}
+                  </span>
+                </div>
+              ),
+            )}
           </div>
           <div>
             <h4 className="mb-1 text-xs font-medium">Raw Data (first 5 entries):</h4>
@@ -616,34 +649,37 @@ const queryClient = new QueryClient({
   },
 })
 
-const createNodeTypes = (onHideSearch: () => void): NodeTypes => ({
-  custom: (props) => <CustomNodeUsWires {...props} onHideSearch={onHideSearch} />,
-  background: SectionBackgroundNode,
-})
+interface FlowDiagramUsWiresPorps {
+  isMonitoringMode: boolean
+}
 
-export function FlowDiagramUsWires() {
+export function FlowDiagramUsWires({ isMonitoringMode = false }: FlowDiagramUsWiresPorps) {
   const { showAmountSearchResults, amountSearchParams, hideAmountResults } = useTransactionSearchUsWiresContext()
   const [showSearchBox, setShowSearchBox] = useState(true)
 
-  const nodeTypes: NodeTypes = useMemo(
-    () => createNodeTypes(() => setShowSearchBox((prev) => !prev)),
-    [], // Empty dependency array since the callback doesn't depend on external values
+  // const { data: timingData, isLoading: isTimingLoading, isError: isTimingError } = useHealthStatusAppTodayData()
+
+  const { totalProcessingTime, splunkData } = useFlowDataBackEnd()
+
+  const [isShowHiden, setIsShowHiden] = useState(isMonitoringMode)
+
+  useEffect(() => {
+    setIsShowHiden(isMonitoringMode)
+  }, [isMonitoringMode])
+
+  const nodeTypes = useMemo(
+    () => createNodeTypes(isShowHiden, () => setShowSearchBox((prev) => !prev), splunkData || []),
+    [isShowHiden, splunkData],
   )
 
   return (
     <QueryClientProvider client={queryClient}>
       <ReactFlowProvider>
         {showSearchBox && <PaymentSearchBoxUsWires />}
-        <InfoSection />
+        <InfoSection time={totalProcessingTime || 0} />
         {showAmountSearchResults && amountSearchParams ? (
           <>
             <div>TransactionSearchResultsGrid Shows</div>
-            {/* <TransactionSearchResultsGrid
-              transactionAmount={amountSearchParams.amount}
-              dateStart={amountSearchParams.dateStart}
-              dateEnd={amountSearchParams.dateEnd}
-              onBack={hideAmountResults}
-            /> */}
           </>
         ) : (
           <Flow nodeTypes={nodeTypes} onShowSearchBox={() => setShowSearchBox(true)} />

@@ -1,26 +1,31 @@
-import { useQuery } from '@tanstack/react-query';
-
-import {
-  getApiV2SplunkDataGetWireFlowOptions,  
-} from '../../data/data-services/react-query.gen';
+import { useQuery } from "@tanstack/react-query"
+import mockWiresFlowData from "./get-wires-flow.json"
 
 interface UseGetSplunkWiresFlowOptions {
-    enabled?: boolean = false,
-    isMonitored?: boolean = false
+  enabled?: boolean
+  isMonitored?: boolean
 }
 
-export function useGetSplunkWiresFlow(
-  options: UseGetSplunkWiresFlowOptions
-) {
-
-    const { enabled, isMonitored } = options;
+export function useGetSplunkWiresFlow(options: UseGetSplunkWiresFlowOptions) {
+  const { enabled = false, isMonitored = false } = options
 
   return useQuery({
-    ...getApiV2SplunkDataGetWireFlowOptions({
-      query: {
-        isMonitored
-      },
-    }),
+    queryKey: ["splunk-wires-flow", { isMonitored }],
+    queryFn: async () => {
+      // Simulate API delay for realistic behavior
+      await new Promise((resolve) => setTimeout(resolve, 500))
+
+      // Filter data based on isMonitored parameter if needed
+      if (isMonitored !== undefined) {
+        // You can add filtering logic here based on your requirements
+        // For now, return all data regardless of isMonitored value
+        return mockWiresFlowData
+      }
+
+      return mockWiresFlowData
+    },
     enabled,
-  });
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  })
 }

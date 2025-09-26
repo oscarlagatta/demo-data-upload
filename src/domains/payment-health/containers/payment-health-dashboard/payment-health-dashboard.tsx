@@ -1,4 +1,14 @@
-import ServiceTable from '@/domains/payment-health/components/tables/service-table/service-table';
+import { QueryClient } from "@tanstack/react-query"
+import ServiceTable from "@/domains/payment-health/components/tables/service-table/service-table"
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 3,
+    },
+  },
+})
 
 function PaymentHealthDashboard() {
   return (
@@ -9,6 +19,6 @@ function PaymentHealthDashboard() {
         </div>
       </main>
     </div>
-  );
+  )
 }
-export default PaymentHealthDashboard;
+export default PaymentHealthDashboard

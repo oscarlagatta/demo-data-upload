@@ -12,15 +12,15 @@ type SectionBackgroundNodeProps = {
 
 type SectionBackgroundNodeType = Node<SectionBackgroundNodeProps>
 
-const SectionBackgroundNode = ({ data }: NodeProps<SectionBackgroundNodeType>) => {
+const SectionBackgroundNode = ({ data, isHide }: NodeProps<SectionBackgroundNodeType> & { isHide: boolean }) => {
   return (
     <div
       className={`h-full w-full rounded-lg bg-white shadow-xl transition-all duration-200 ${
-        data.isDimmed
-      } ? 'opacity-60' : '' }`}
+        data.isDimmed ? "opacity-60" : ""
+      }`}
     >
       <div className="p-4">
-        {data.duration && (
+        {data.duration !== undefined && data.duration > 0 && (
           <div className="mb-3 flex justify-center">
             <SectionDurationBadge
               duration={data.duration}
