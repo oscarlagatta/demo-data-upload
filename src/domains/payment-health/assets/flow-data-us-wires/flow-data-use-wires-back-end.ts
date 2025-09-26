@@ -1,52 +1,8 @@
 import type { AppNode } from "../../types/app-node"
+import type { SectionTiming, SectionPositions } from "../../types/api-flow-data"
 import { classToParentId } from "@/domains/payment-health/utils/shared-mappings"
+import { transformEnhancedApiData } from "@/domains/payment-health/utils/transform-utils"
 import { useGetSplunkWiresFlow } from "@/domains/payment-health/hooks/use-get-splunk-us-wires/get-wires-flow"
-
-interface SplunkData {
-  aiT_NUM: string
-  aiT_NAME: string
-  floW_DIRECTION: string | null
-  floW_AIT_NUM: string | null
-  floW_AIT_NAME: string | null
-  iS_TRAFFIC_FLOWING: string
-  iS_TRAFFIC_ON_TREND: string | null
-  averagE_TRANSACTION_COUNT: string | null
-  currenT_TRANSACTION_COUNT: string | null
-  historic_STD: string | null
-  historic_MEAN: string | null
-  currenT_STD_VARIATION: string | null
-}
-
-interface ApiNode {
-  id: string
-  label: string
-  category: string
-  isTrafficFlowing: boolean
-  currentThruputTime30: number
-  averageThruputTime30: number
-  systemHealth: string
-  splunkDatas: SplunkData[]
-  step: number
-}
-
-interface SystemConnection {
-  id: string
-  source: string
-  target: string | string[]
-}
-
-interface ApiData {
-  nodes: ApiNode[]
-  systemConnections: SystemConnection[]
-  processingSections?: Array<{
-    id: string
-    title: string
-    averageThroughputTime: number
-    aitNumber: string[]
-  }>
-  averageThruputTime30?: number
-  layOutConfig?: any[]
-}
 
 /**
  * Enhanced hook that provides flow data using backend configuration
@@ -62,12 +18,12 @@ export function useFlowDataBackEnd() {
     isMonitored: false,
   })
 
-  const sectionTimings = Object.fromEntries(
+  const sectionTimings: Record<string, SectionTiming> = Object.fromEntries(
     flowData?.processingSections?.map((section) => [
       section.id,
       {
         duration: section.averageThroughputTime || 0,
-        trend: "stable" as const, // Could be enhanced with actual trend calculation
+        trend: "stable" as const,
       },
     ]) || [],
   )
@@ -91,7 +47,7 @@ export function useFlowDataBackEnd() {
       style: config.style,
     })) || []
 
-  const sectionPositions: Record<string, { baseX: number; positions: { x: number; y: number }[] }> = Object.fromEntries(
+  const sectionPositions: Record<string, SectionPositions> = Object.fromEntries(
     flowData?.layOutConfig?.map((config) => [config.id, config.sectionPositions.sections[config.id]]) || [],
   )
 
@@ -112,99 +68,5 @@ export function useFlowDataBackEnd() {
   }
 }
 
-function transformEnhancedApiData(
-  apiData: ApiData, // Properly typed API data instead of any
-  backgroundNodes: AppNode[],
-  classToParentId: Record<string, string>,
-  sectionPositions: Record<string, { baseX: number; positions: { x: number; y: number }[] }>,
-) {
-  const sectionCounters: Record<string, number> = Object.keys(sectionPositions).reduce(
-    (acc, key: string) => ({ ...acc, [key]: 0 }),
-    {},
-  )
-
-  const transformedNodes: AppNode[] = apiData.nodes
-    .map((apiNode: ApiNode): AppNode | null => {
-      // Explicitly typed apiNode parameter
-      // Map category to parent ID
-      const parentId = classToParentId[apiNode.category?.toLowerCase()] || getCategoryParentId(apiNode.category)
-
-      if (!parentId) return null
-
-      const sectionConfig = sectionPositions[parentId]
-      if (!sectionConfig) return null
-
-      const positionIndex = sectionCounters[parentId]++
-      const position = sectionConfig.positions[positionIndex] || {
-        x: sectionConfig.baseX,
-        y: 100 + positionIndex * 120,
-      }
-
-      return {
-        id: apiNode.id,
-        type: "custom" as const,
-        position,
-        data: {
-          title: apiNode.label,
-          subtext: `AIT ${apiNode.id}`,
-          systemHealth: apiNode.systemHealth,
-          isTrafficFlowing: apiNode.isTrafficFlowing,
-          currentThruputTime30: apiNode.currentThruputTime30,
-          averageThruputTime30: apiNode.averageThruputTime30,
-          splunkDatas: apiNode.splunkDatas,
-          step: apiNode.step,
-        },
-        parentId: parentId,
-        extent: "parent" as const,
-      }
-    })
-    .filter((n): n is AppNode => n !== null) // Added proper type guard for filter
-
-  const transformedEdges = apiData.systemConnections.flatMap((connection: SystemConnection) => {
-    // Explicitly typed connection parameter
-    const { source, target } = connection
-    if (Array.isArray(target)) {
-      return target.map((t) => ({
-        id: `${source}-${t}`,
-        source,
-        target: t,
-        type: "smoothstep",
-        style: { stroke: "#6b7280", strokeWidth: 2 },
-        markerStart: { type: "ArrowClosed", color: "#6b7280" },
-        markerEnd: { type: "ArrowClosed", color: "#6b7280" },
-      }))
-    } else {
-      return [
-        {
-          id: `${source}-${target}`,
-          source,
-          target: target as string,
-          type: "smoothstep",
-          style: { stroke: "#6b7280", strokeWidth: 2 },
-          markerStart: { type: "ArrowClosed", color: "#6b7280" },
-          markerEnd: { type: "ArrowClosed", color: "#6b7280" },
-        },
-      ]
-    }
-  })
-
-  return {
-    nodes: [...backgroundNodes, ...transformedNodes],
-    edges: transformedEdges,
-  }
-}
-
-function getCategoryParentId(category: string): string | null {
-  const categoryMap: Record<string, string> = {
-    origination: "bg-origination",
-    "payment validation and routing": "bg-validation",
-    middleware: "bg-middleware",
-    "payment processing, sanctions & investigation": "bg-processing",
-  }
-
-  return categoryMap[category?.toLowerCase()] || null
-}
-
 // Export the initial nodes and edges for backward compatibility
-// These will be empty arrays until the hook data is loaded
 export const { nodes: initialNodes, edges: initialEdges } = { nodes: [], edges: [] }
