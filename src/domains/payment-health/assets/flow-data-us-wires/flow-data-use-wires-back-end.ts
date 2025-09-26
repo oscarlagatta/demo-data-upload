@@ -56,23 +56,21 @@ export function useFlowDataBackEnd() {
   const {
     data: flowData,
     isLoading,
-    isError, // Use isError instead of error for consistency
+    isError,
   } = useGetSplunkWiresFlow({
     enabled: true,
     isMonitored: false,
   })
 
-  const sectionTimings =
-    flowData?.processingSections?.reduce(
-      (acc, section) => ({
-        ...acc,
-        [section.id]: {
-          duration: section.averageThroughputTime || 0,
-          trend: "stable" as const, // Could be enhanced with trend calculation
-        },
-      }),
-      {} as Record<string, { duration: number; trend: "up" | "down" | "stable" }>,
-    ) || {}
+  const sectionTimings = Object.fromEntries(
+    flowData?.processingSections?.map((section) => [
+      section.id,
+      {
+        duration: section.averageThroughputTime || 0,
+        trend: "stable" as const, // Could be enhanced with actual trend calculation
+      },
+    ]) || [],
+  )
 
   const totalProcessingTime =
     flowData?.averageThruputTime30 || Object.values(sectionTimings).reduce((sum, section) => sum + section.duration, 0)
@@ -80,7 +78,7 @@ export function useFlowDataBackEnd() {
   const backgroundNodes: AppNode[] =
     flowData?.layOutConfig?.map((config) => ({
       id: config.id,
-      type: config.type as "background",
+      type: "background" as const,
       position: config.position,
       data: {
         title: config.data.title,
@@ -93,24 +91,9 @@ export function useFlowDataBackEnd() {
       style: config.style,
     })) || []
 
-  const sectionPositions: Record<string, { baseX: number; positions: { x: number; y: number }[] }> =
-    flowData?.layOutConfig?.reduce(
-      (acc, config) => {
-        // Extract section positions from the config
-        const sections = config.sectionPositions?.sections || {}
-
-        // Merge all sections into the accumulator
-        Object.entries(sections).forEach(([sectionId, sectionData]) => {
-          acc[sectionId] = {
-            baseX: sectionData.baseX,
-            positions: sectionData.positions,
-          }
-        })
-
-        return acc
-      },
-      {} as Record<string, { baseX: number; positions: { x: number; y: number }[] }>,
-    ) || {}
+  const sectionPositions: Record<string, { baseX: number; positions: { x: number; y: number }[] }> = Object.fromEntries(
+    flowData?.layOutConfig?.map((config) => [config.id, config.sectionPositions.sections[config.id]]) || [],
+  )
 
   const transformedData = flowData
     ? transformEnhancedApiData(flowData, backgroundNodes, classToParentId, sectionPositions)
@@ -120,7 +103,7 @@ export function useFlowDataBackEnd() {
     nodes: transformedData.nodes,
     edges: transformedData.edges,
     isLoading,
-    isError, // Return isError instead of error
+    isError,
     backgroundNodes,
     sectionPositions,
     sectionTimings,
