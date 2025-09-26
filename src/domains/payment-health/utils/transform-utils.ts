@@ -110,9 +110,18 @@ export function transformEnhancedApiData(
 
   const transformedNodes: AppNode[] = apiData.nodes
     .map((apiNode: ApiNode): AppNode | null => {
-      const parentId = classToParentId[apiNode.category?.toLowerCase()] || getCategoryParentId(apiNode.category)
+      let parentId: string | null = null
 
-      if (!parentId) return null
+      if (apiNode.category) {
+        // First try the direct mapping with lowercase category
+        const categoryKey = apiNode.category.toLowerCase()
+        parentId = classToParentId[categoryKey] || getCategoryParentId(apiNode.category)
+      }
+
+      if (!parentId) {
+        console.warn(`No parent ID found for node ${apiNode.id} with category: ${apiNode.category || "undefined"}`)
+        return null
+      }
 
       const sectionConfig = sectionPositions[parentId]
       if (!sectionConfig) return null
@@ -176,7 +185,11 @@ export function transformEnhancedApiData(
   }
 }
 
-export function getCategoryParentId(category: string): string | null {
+export function getCategoryParentId(category: string | undefined): string | null {
+  if (!category || typeof category !== "string") {
+    return null
+  }
+
   const categoryMap: Record<string, string> = {
     origination: "bg-origination",
     "payment validation and routing": "bg-validation",
@@ -184,5 +197,5 @@ export function getCategoryParentId(category: string): string | null {
     "payment processing, sanctions & investigation": "bg-processing",
   }
 
-  return categoryMap[category?.toLowerCase()] || null
+  return categoryMap[category.toLowerCase()] || null
 }
