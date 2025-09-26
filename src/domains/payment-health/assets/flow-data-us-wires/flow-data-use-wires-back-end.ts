@@ -2,6 +2,52 @@ import type { AppNode } from "../../types/app-node"
 import { classToParentId } from "@/domains/payment-health/utils/shared-mappings"
 import { useGetSplunkWiresFlow } from "@/domains/payment-health/hooks/use-get-splunk-us-wires/get-wires-flow"
 
+interface SplunkData {
+  aiT_NUM: string
+  aiT_NAME: string
+  floW_DIRECTION: string | null
+  floW_AIT_NUM: string | null
+  floW_AIT_NAME: string | null
+  iS_TRAFFIC_FLOWING: string
+  iS_TRAFFIC_ON_TREND: string | null
+  averagE_TRANSACTION_COUNT: string | null
+  currenT_TRANSACTION_COUNT: string | null
+  historic_STD: string | null
+  historic_MEAN: string | null
+  currenT_STD_VARIATION: string | null
+}
+
+interface ApiNode {
+  id: string
+  label: string
+  category: string
+  isTrafficFlowing: boolean
+  currentThruputTime30: number
+  averageThruputTime30: number
+  systemHealth: string
+  splunkDatas: SplunkData[]
+  step: number
+}
+
+interface SystemConnection {
+  id: string
+  source: string
+  target: string | string[]
+}
+
+interface ApiData {
+  nodes: ApiNode[]
+  systemConnections: SystemConnection[]
+  processingSections?: Array<{
+    id: string
+    title: string
+    averageThroughputTime: number
+    aitNumber: string[]
+  }>
+  averageThruputTime30?: number
+  layOutConfig?: any[]
+}
+
 /**
  * Enhanced hook that provides flow data using backend configuration
  * Now uses the unified flow data source with comprehensive timing integration
@@ -84,7 +130,7 @@ export function useFlowDataBackEnd() {
 }
 
 function transformEnhancedApiData(
-  apiData: any, // New flow data structure
+  apiData: ApiData, // Properly typed API data instead of any
   backgroundNodes: AppNode[],
   classToParentId: Record<string, string>,
   sectionPositions: Record<string, { baseX: number; positions: { x: number; y: number }[] }>,
@@ -95,7 +141,8 @@ function transformEnhancedApiData(
   )
 
   const transformedNodes: AppNode[] = apiData.nodes
-    .map((apiNode): AppNode | null => {
+    .map((apiNode: ApiNode): AppNode | null => {
+      // Explicitly typed apiNode parameter
       // Map category to parent ID
       const parentId = classToParentId[apiNode.category?.toLowerCase()] || getCategoryParentId(apiNode.category)
 
@@ -128,9 +175,10 @@ function transformEnhancedApiData(
         extent: "parent" as const,
       }
     })
-    .filter((n): n is AppNode => n !== null)
+    .filter((n): n is AppNode => n !== null) // Added proper type guard for filter
 
-  const transformedEdges = apiData.systemConnections.flatMap((connection) => {
+  const transformedEdges = apiData.systemConnections.flatMap((connection: SystemConnection) => {
+    // Explicitly typed connection parameter
     const { source, target } = connection
     if (Array.isArray(target)) {
       return target.map((t) => ({
