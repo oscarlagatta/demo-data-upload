@@ -35,7 +35,6 @@ import { TransactionDetailsTableAgGrid } from "@/domains/payment-health/componen
 import CustomNodeUsWires from "@/domains/payment-health/components/flow/nodes/custom-nodes-us-wires/custom-node-us-wires"
 import SectionBackgroundNode from "@/domains/payment-health/components/flow/nodes/expandable-charts/section-background-node"
 import { useFlowDataBackEnd } from "@/domains/payment-health/assets/flow-data-us-wires/flow-data-use-wires-back-end"
-// import { useHealthStatusAppTodayData } from "@/domains/payment-health/hooks/use-health-status-app-today-data/use-health-status-app-today-data"
 
 const SECTION_IDS = ["bg-origination", "bg-validation", "bg-middleware", "bg-processing"]
 
@@ -51,11 +50,24 @@ const GAP_WIDTH = 16
 
 type ActionType = "flow" | "trend" | "balanced"
 
-const createNodeTypes = (isShowHiden: boolean, onHideSearch: () => void, splunkData: any[]): NodeTypes => ({
+const createNodeTypes = (
+  isShowHiden: boolean,
+  onHideSearch: () => void,
+  splunkData: any[],
+  sectionTimings: Record<string, { duration: number; trend: string }> | null,
+): NodeTypes => ({
   custom: (props) => (
     <CustomNodeUsWires {...props} isShowHiden={isShowHiden} onHideSearch={onHideSearch} splunkData={splunkData} />
   ),
-  background: (props: any) => <SectionBackgroundNode isHide={isShowHiden} {...props} />,
+  background: (props: any) => (
+    <SectionBackgroundNode
+      isHide={isShowHiden}
+      {...props}
+      // Pass timing data to background nodes
+      duration={sectionTimings?.[props.id]?.duration}
+      trend={sectionTimings?.[props.id]?.trend}
+    />
+  ),
 })
 
 // Custom Draggable Component that works with React 19
@@ -134,9 +146,21 @@ const DraggablePanel = ({
 const Flow = ({
   nodeTypes,
   onShowSearchBox,
+  splunkData,
+  sectionTimings,
+  totalProcessingTime,
+  isLoading,
+  isError,
+  onRefetch,
 }: {
   nodeTypes: NodeTypes
   onShowSearchBox: () => void
+  splunkData: any[] | null
+  sectionTimings: Record<string, { duration: number; trend: string }> | null
+  totalProcessingTime: number | null
+  isLoading: boolean
+  isError: boolean
+  onRefetch: () => void
 }) => {
   const { showTableView } = useTransactionSearchUsWiresContext()
   const [nodes, setNodes] = useState<Node[]>([])
@@ -159,35 +183,14 @@ const Flow = ({
   const width = useStore((state) => state.width)
   const isAuthorized = true // hasRequiredRole();
 
-  // const {
-  //   data: splunkData,
-  //   isLoading,
-  //   isError,
-  //   refetch,
-  //   isFetching,
-  // } = useGetSplunkUsWires({
-  //   enabled: isAuthorized,
-  // })
+  const { nodes: flowNodes, edges: flowEdges } = useFlowDataBackEnd()
 
-  const {
-    nodes: flowNodes,
-    edges: flowEdges,
-    isLoading: isFlowDataLoading,
-    error: flowDataError,
-    sectionTimings,
-    totalProcessingTime,
-    splunkData,
-  } = useFlowDataBackEnd()
-
-  const isLoading = isFlowDataLoading
-  const isError = !!flowDataError
-  const isFetching = isFlowDataLoading
+  const isFetching = isLoading
   const isSuccess = !isLoading && !isError && splunkData
 
   const handleRefetch = async () => {
     try {
-      // Note: The new hook doesn't expose refetch directly
-      // This could be enhanced by exposing refetch from useGetSplunkWiresFlow
+      onRefetch()
       setLastRefetch(new Date())
       toast.success("Data successfully refreshed!", {
         description: "The latest data has been loaded",
@@ -200,7 +203,7 @@ const Flow = ({
       })
     }
   }
-  // Function to find connected nodes and edges
+
   const findConnections = useCallback(
     (nodeId: string) => {
       const connectedNodes = new Set<string>()
@@ -220,17 +223,15 @@ const Flow = ({
     },
     [edges],
   )
-  // Handle node click
+
   const handleNodeClick = useCallback(
     (nodeId: string) => {
       if (isLoading || isFetching) return
       if (selectedNodeId === nodeId) {
-        // clicking the same node deselects it
         setSelectedNodeId(null)
         setConnectedNodeIds(new Set())
         setConnectedEdgeIds(new Set())
       } else {
-        // Select new node and find its connections
         const { connectedNodes, connectedEdges } = findConnections(nodeId)
         setSelectedNodeId(nodeId)
         setConnectedNodeIds(connectedNodes)
@@ -239,6 +240,7 @@ const Flow = ({
     },
     [selectedNodeId, findConnections, isLoading, isFetching],
   )
+
   const handleActionClick = useCallback((aitNum: string, action: ActionType) => {
     setTableMode({
       show: true,
@@ -246,7 +248,7 @@ const Flow = ({
       action,
     })
   }, [])
-  // Get connected systems names for display
+
   const getConnectedSystemNames = useCallback(() => {
     if (!selectedNodeId) {
       return []
@@ -262,7 +264,6 @@ const Flow = ({
   useEffect(() => {
     if (flowNodes.length > 0) {
       const nodesWithTiming = flowNodes.map((node) => {
-        // If it's a background node, add timing data
         if (node.type === "background" && sectionTimings?.[node.id]) {
           return {
             ...node,
@@ -293,7 +294,6 @@ const Flow = ({
         let currentX = 0
         const newNodes = [...currentNodes]
         const sectionDimensions: Record<string, { x: number; width: number }> = {}
-        // First pass: update background nodes and store their new dimensions
         for (let i = 0; i < SECTION_IDS.length; i++) {
           const sectionId = SECTION_IDS[i]
           const nodeIndex = newNodes.findIndex((n) => n.id === sectionId)
@@ -311,7 +311,6 @@ const Flow = ({
             currentX += sectionWidth + GAP_WIDTH
           }
         }
-        // Second pass: update child nodes based on their parent's new dimensions
         for (let i = 0; i < newNodes.length; i++) {
           const node = newNodes[i]
           if (node.parentId && sectionDimensions[node.parentId]) {
@@ -339,7 +338,6 @@ const Flow = ({
   }, [width, flowNodes])
 
   useEffect(() => {
-    // Calculate the bounding box of all nodes and adjust the canvas height
     const updateCanvasHeight = () => {
       if (nodes.length === 0) return
       let minY = Number.POSITIVE_INFINITY
@@ -360,10 +358,12 @@ const Flow = ({
     (changes: NodeChange<Node>[]) => setNodes((nds) => applyNodeChanges(changes, nds)),
     [setNodes],
   )
+
   const onEdgesChange: OnEdgesChange = useCallback(
     (changes: EdgeChange<Edge>[]) => setEdges((eds) => applyEdgeChanges(changes, eds)),
     [setEdges],
   )
+
   const onConnect: OnConnect = useCallback(
     (connection) =>
       setEdges((eds) =>
@@ -380,6 +380,7 @@ const Flow = ({
       ),
     [setEdges],
   )
+
   const nodesForFlow = useMemo(() => {
     return nodes.map((node) => {
       const isSelected = selectedNodeId === node.id
@@ -407,6 +408,7 @@ const Flow = ({
       }
     })
   }, [nodes, selectedNodeId, connectedNodeIds, handleNodeClick, handleActionClick])
+
   const edgesForFlow = useMemo(() => {
     return edges.map((edge) => {
       const isConnected = connectedEdgeIds.has(edge.id)
@@ -423,6 +425,7 @@ const Flow = ({
       }
     })
   }, [edges, connectedEdgeIds, selectedNodeId])
+
   const renderDataPanel = () => {
     if (isLoading) {
       return (
@@ -516,7 +519,7 @@ const Flow = ({
     return null
   }
 
-  if (isFlowDataLoading) {
+  if (isLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <div className="space-y-3 text-center">
@@ -527,7 +530,7 @@ const Flow = ({
     )
   }
 
-  if (flowDataError) {
+  if (isError) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <div className="space-y-3 text-center">
@@ -542,9 +545,9 @@ const Flow = ({
   if (showTableView) {
     return <TransactionDetailsTableAgGrid />
   }
+
   return (
     <div className="relative h-full w-full" style={{ height: `${canvasHeight}px` }}>
-      {/* If table mode is on, render the AG Grid and hide flow */}
       {tableMode.show ? (
         <SplunkTableUsWires
           aitNum={tableMode.aitNum!}
@@ -560,7 +563,6 @@ const Flow = ({
         />
       ) : (
         <>
-          {/* Refresh Data Button - Icon only, docked top-right */}
           <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
             {lastRefetch && !isFetching && (
               <span className="text-muted-foreground text-xs">Last updated: {lastRefetch.toLocaleTimeString()}</span>
@@ -595,16 +597,8 @@ const Flow = ({
             <Controls />
             <Background gap={16} size={1} />
           </ReactFlow>
-          {/* Connected System Panel */}
           {selectedNodeId && (
-            <DraggablePanel
-              onStart={() => {
-                // Optional: Add any start drag logic
-              }}
-              onStop={() => {
-                // Optional: Add any stop drag logic
-              }}
-            >
+            <DraggablePanel onStart={() => {}} onStop={() => {}}>
               <div className="absolute top-4 left-4 z-10 max-w-sm rounded-lg border bg-white p-4 shadow-lg">
                 <h3 className="mb-2 text-sm font-semibold text-gray-800">
                   Selected System:{" "}
@@ -657,9 +651,16 @@ export function FlowDiagramUsWires({ isMonitoringMode = false }: FlowDiagramUsWi
   const { showAmountSearchResults, amountSearchParams, hideAmountResults } = useTransactionSearchUsWiresContext()
   const [showSearchBox, setShowSearchBox] = useState(true)
 
-  // const { data: timingData, isLoading: isTimingLoading, isError: isTimingError } = useHealthStatusAppTodayData()
-
-  const { totalProcessingTime, splunkData } = useFlowDataBackEnd()
+  const {
+    nodes: flowNodes,
+    edges: flowEdges,
+    isLoading,
+    error,
+    sectionTimings,
+    totalProcessingTime,
+    splunkData,
+    refetch,
+  } = useFlowDataBackEnd()
 
   const [isShowHiden, setIsShowHiden] = useState(isMonitoringMode)
 
@@ -668,9 +669,15 @@ export function FlowDiagramUsWires({ isMonitoringMode = false }: FlowDiagramUsWi
   }, [isMonitoringMode])
 
   const nodeTypes = useMemo(
-    () => createNodeTypes(isShowHiden, () => setShowSearchBox((prev) => !prev), splunkData || []),
-    [isShowHiden, splunkData],
+    () => createNodeTypes(isShowHiden, () => setShowSearchBox((prev) => !prev), splunkData || [], sectionTimings),
+    [isShowHiden, splunkData, sectionTimings],
   )
+
+  const handleRefetch = useCallback(() => {
+    if (refetch) {
+      refetch()
+    }
+  }, [refetch])
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -682,7 +689,16 @@ export function FlowDiagramUsWires({ isMonitoringMode = false }: FlowDiagramUsWi
             <div>TransactionSearchResultsGrid Shows</div>
           </>
         ) : (
-          <Flow nodeTypes={nodeTypes} onShowSearchBox={() => setShowSearchBox(true)} />
+          <Flow
+            nodeTypes={nodeTypes}
+            onShowSearchBox={() => setShowSearchBox(true)}
+            splunkData={splunkData}
+            sectionTimings={sectionTimings}
+            totalProcessingTime={totalProcessingTime}
+            isLoading={isLoading}
+            isError={!!error}
+            onRefetch={handleRefetch}
+          />
         )}
       </ReactFlowProvider>
     </QueryClientProvider>
