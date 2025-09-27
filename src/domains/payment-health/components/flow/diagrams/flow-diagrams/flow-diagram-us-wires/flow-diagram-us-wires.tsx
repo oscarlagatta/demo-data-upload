@@ -17,9 +17,20 @@ const createNodeTypes = (
   onHideSearch: () => void,
   splunkData: any[],
   sectionTimings: Record<string, { duration: number; trend: string }> | null,
+  isLoading: boolean,
+  isError: boolean,
+  isFetching: boolean,
 ): NodeTypes => ({
   custom: (props) => (
-    <CustomNodeUsWires {...props} isShowHiden={isShowHiden} onHideSearch={onHideSearch} splunkData={splunkData} />
+    <CustomNodeUsWires
+      {...props}
+      isShowHiden={isShowHiden}
+      onHideSearch={onHideSearch}
+      splunkData={splunkData}
+      isLoading={isLoading}
+      isError={isError}
+      isFetching={isFetching}
+    />
   ),
   background: (props: any) => (
     <SectionBackgroundNode
@@ -53,8 +64,17 @@ export function FlowDiagramUsWires({ isMonitoringMode = false }: FlowDiagramProp
   }, [isMonitoringMode])
 
   const nodeTypes = useMemo(
-    () => createNodeTypes(isShowHiden, () => setShowSearchBox((prev) => !prev), splunkData || [], sectionTimings),
-    [isShowHiden, splunkData, sectionTimings],
+    () =>
+      createNodeTypes(
+        isShowHiden,
+        () => setShowSearchBox((prev) => !prev),
+        splunkData || [],
+        sectionTimings,
+        isLoading,
+        !!error,
+        false, // isFetching can be derived from other states if needed
+      ),
+    [isShowHiden, splunkData, sectionTimings, isLoading, error],
   )
 
   const handleRefetch = useCallback(() => {

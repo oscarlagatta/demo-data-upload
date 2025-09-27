@@ -9,7 +9,7 @@ interface UseGetSplunkWiresFlowOptions {
 export function useGetSplunkWiresFlow(options: UseGetSplunkWiresFlowOptions) {
   const { enabled = false, isMonitored = false } = options
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["splunk-wires-flow", { isMonitored }],
     queryFn: async () => {
       // Simulate API delay for realistic behavior
@@ -34,5 +34,6 @@ export function useGetSplunkWiresFlow(options: UseGetSplunkWiresFlowOptions) {
     isLoading,
     isError,
     error, // Keep error for detailed error information if needed
+    refetch, // Now exposing refetch function for manual data refresh
   }
 }

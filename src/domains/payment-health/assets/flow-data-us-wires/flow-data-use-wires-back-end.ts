@@ -13,6 +13,7 @@ export function useFlowDataBackEnd() {
     data: flowData,
     isLoading,
     isError,
+    refetch,
   } = useGetSplunkWiresFlow({
     enabled: true,
     isMonitored: false,
@@ -65,6 +66,7 @@ export function useFlowDataBackEnd() {
     sectionTimings,
     totalProcessingTime,
     splunkData: flowData?.nodes || [],
+    refetch, // Now exposing refetch function for manual data refresh
   }
 }
 
