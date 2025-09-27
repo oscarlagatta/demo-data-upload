@@ -28,6 +28,14 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useTransactionSearchUsWiresContext } from "@/domains/payment-health/providers/us-wires/us-wires-transaction-search-provider"
 import { computeTrafficStatusColors } from "@/domains/payment-health/utils/traffic-status-utils"
+import { updateNodePositions, calculateCanvasHeight } from "@/domains/payment-health/utils/flow-layout-utils"
+import { findNodeConnections, getConnectedSystemNames } from "@/domains/payment-health/utils/flow-connection-utils"
+import type {
+  ActionType,
+  TableModeState,
+  FlowDiagramProps,
+  FlowProps,
+} from "@/domains/payment-health/types/flow-diagram-types"
 import { InfoSection } from "../../../../indicators/info-section/info-section"
 import PaymentSearchBoxUsWires from "@/domains/payment-health/components/search/payment-search-box-us-wires/payment-search-box-us-wires"
 import SplunkTableUsWires from "@/domains/payment-health/components/tables/splunk-table-us-wires/splunk-table-us-wires"
@@ -35,20 +43,6 @@ import { TransactionDetailsTableAgGrid } from "@/domains/payment-health/componen
 import CustomNodeUsWires from "@/domains/payment-health/components/flow/nodes/custom-nodes-us-wires/custom-node-us-wires"
 import SectionBackgroundNode from "@/domains/payment-health/components/flow/nodes/expandable-charts/section-background-node"
 import { useFlowDataBackEnd } from "@/domains/payment-health/assets/flow-data-us-wires/flow-data-use-wires-back-end"
-
-const SECTION_IDS = ["bg-origination", "bg-validation", "bg-middleware", "bg-processing"]
-
-const sectionDurations = {
-  "bg-origination": 1.2,
-  "bg-validation": 2.8,
-  "bg-middleware": 1.9,
-  "bg-processing": 3.4,
-}
-
-const SECTION_WIDTH_PROPORTIONS = [0.2, 0.2, 0.25, 0.35]
-const GAP_WIDTH = 16
-
-type ActionType = "flow" | "trend" | "balanced"
 
 const createNodeTypes = (
   isShowHiden: boolean,
@@ -63,7 +57,6 @@ const createNodeTypes = (
     <SectionBackgroundNode
       isHide={isShowHiden}
       {...props}
-      // Pass timing data to background nodes
       duration={sectionTimings?.[props.id]?.duration}
       trend={sectionTimings?.[props.id]?.trend}
     />
@@ -152,16 +145,7 @@ const Flow = ({
   isLoading,
   isError,
   onRefetch,
-}: {
-  nodeTypes: NodeTypes
-  onShowSearchBox: () => void
-  splunkData: any[] | null
-  sectionTimings: Record<string, { duration: number; trend: string }> | null
-  totalProcessingTime: number | null
-  isLoading: boolean
-  isError: boolean
-  onRefetch: () => void
-}) => {
+}: FlowProps) => {
   const { showTableView } = useTransactionSearchUsWiresContext()
   const [nodes, setNodes] = useState<Node[]>([])
   const [edges, setEdges] = useState<Edge[]>([])
@@ -169,19 +153,14 @@ const Flow = ({
   const [connectedNodeIds, setConnectedNodeIds] = useState<Set<string>>(new Set())
   const [connectedEdgeIds, setConnectedEdgeIds] = useState<Set<string>>(new Set())
   const [lastRefetch, setLastRefetch] = useState<Date | null>(null)
-  const [canvasHeight, setCanvasHeight] = useState<number>(500) // default height
-  // Table mode state
-  const [tableMode, setTableMode] = useState<{
-    show: boolean
-    aitNum: string | null
-    action: ActionType | null
-  }>({
+  const [canvasHeight, setCanvasHeight] = useState<number>(500)
+  const [tableMode, setTableMode] = useState<TableModeState>({
     show: false,
     aitNum: null,
     action: null,
   })
   const width = useStore((state) => state.width)
-  const isAuthorized = true // hasRequiredRole();
+  const isAuthorized = true
 
   const { nodes: flowNodes, edges: flowEdges } = useFlowDataBackEnd()
 
@@ -204,25 +183,7 @@ const Flow = ({
     }
   }
 
-  const findConnections = useCallback(
-    (nodeId: string) => {
-      const connectedNodes = new Set<string>()
-      const connectedEdges = new Set<string>()
-      edges.forEach((edge) => {
-        if (edge.source === nodeId || edge.target === nodeId) {
-          connectedEdges.add(edge.id)
-          if (edge.source === nodeId) {
-            connectedNodes.add(edge.target)
-          }
-          if (edge.target === nodeId) {
-            connectedNodes.add(edge.source)
-          }
-        }
-      })
-      return { connectedNodes, connectedEdges }
-    },
-    [edges],
-  )
+  const findConnections = useCallback((nodeId: string) => findNodeConnections(nodeId, edges), [edges])
 
   const handleNodeClick = useCallback(
     (nodeId: string) => {
@@ -249,16 +210,11 @@ const Flow = ({
     })
   }, [])
 
-  const getConnectedSystemNames = useCallback(() => {
+  const getConnectedSystemNamesCallback = useCallback(() => {
     if (!selectedNodeId) {
       return []
     }
-    return Array.from(connectedNodeIds)
-      .map((nodeId) => {
-        const node = nodes.find((n) => n.id === nodeId)
-        return node?.data?.["title"] || nodeId
-      })
-      .sort()
+    return getConnectedSystemNames(connectedNodeIds, nodes)
   }, [selectedNodeId, connectedNodeIds, nodes])
 
   useEffect(() => {
@@ -288,70 +244,13 @@ const Flow = ({
 
   useEffect(() => {
     if (width > 0 && flowNodes.length > 0) {
-      setNodes((currentNodes) => {
-        const totalGapWidth = GAP_WIDTH * (SECTION_IDS.length - 1)
-        const availableWidth = width - totalGapWidth
-        let currentX = 0
-        const newNodes = [...currentNodes]
-        const sectionDimensions: Record<string, { x: number; width: number }> = {}
-        for (let i = 0; i < SECTION_IDS.length; i++) {
-          const sectionId = SECTION_IDS[i]
-          const nodeIndex = newNodes.findIndex((n) => n.id === sectionId)
-          if (nodeIndex !== -1) {
-            const sectionWidth = availableWidth * SECTION_WIDTH_PROPORTIONS[i]
-            sectionDimensions[sectionId] = { x: currentX, width: sectionWidth }
-            newNodes[nodeIndex] = {
-              ...newNodes[nodeIndex],
-              position: { x: currentX, y: 0 },
-              style: {
-                ...newNodes[nodeIndex].style,
-                width: `${sectionWidth}px`,
-              },
-            }
-            currentX += sectionWidth + GAP_WIDTH
-          }
-        }
-        for (let i = 0; i < newNodes.length; i++) {
-          const node = newNodes[i]
-          if (node.parentId && sectionDimensions[node.parentId]) {
-            const parentDimensions = sectionDimensions[node.parentId]
-            const originalNode = flowNodes.find((n) => n.id === node.id)
-            const originalParent = flowNodes.find((n) => n.id === node.parentId)
-            if (originalNode && originalParent && originalParent.style?.width) {
-              const originalParentWidth = Number.parseFloat(originalParent.style.width as string)
-              const originalRelativeXOffset = originalNode.position.x - originalParent.position.x
-              const newAbsoluteX =
-                parentDimensions.x + (originalRelativeXOffset / originalParentWidth) * parentDimensions.width
-              newNodes[i] = {
-                ...node,
-                position: {
-                  x: newAbsoluteX,
-                  y: node.position.y,
-                },
-              }
-            }
-          }
-        }
-        return newNodes
-      })
+      setNodes((currentNodes) => updateNodePositions(currentNodes, flowNodes, width))
     }
   }, [width, flowNodes])
 
   useEffect(() => {
-    const updateCanvasHeight = () => {
-      if (nodes.length === 0) return
-      let minY = Number.POSITIVE_INFINITY
-      let maxY = Number.NEGATIVE_INFINITY
-      nodes.forEach((node) => {
-        const nodeY = node.position.y
-        const nodeHeight = node.style?.height ? Number.parseFloat(node.style?.height as string) : 0
-        minY = Math.min(minY, nodeY)
-        maxY = Math.max(maxY, nodeY + nodeHeight)
-      })
-      const calculatedHeight = maxY - minY + 50
-      setCanvasHeight(calculatedHeight)
-    }
-    updateCanvasHeight()
+    const newHeight = calculateCanvasHeight(nodes)
+    setCanvasHeight(newHeight)
   }, [nodes])
 
   const onNodesChange: OnNodesChange = useCallback(
@@ -610,7 +509,7 @@ const Flow = ({
                       Connected Systems ({connectedNodeIds.size}):
                     </h4>
                     <div className="max-h-32 overflow-y-auto">
-                      {getConnectedSystemNames().map((systemName, index) => (
+                      {getConnectedSystemNamesCallback().map((systemName, index) => (
                         <div key={index} className="mb-1 rounded bg-blue-50 px-2 py-1 text-xs text-gray-700">
                           {typeof systemName === "string" ? systemName : JSON.stringify(systemName)}
                         </div>
@@ -643,24 +542,11 @@ const queryClient = new QueryClient({
   },
 })
 
-interface FlowDiagramUsWiresPorps {
-  isMonitoringMode: boolean
-}
-
-export function FlowDiagramUsWires({ isMonitoringMode = false }: FlowDiagramUsWiresPorps) {
-  const { showAmountSearchResults, amountSearchParams, hideAmountResults } = useTransactionSearchUsWiresContext()
+export function FlowDiagramUsWires({ isMonitoringMode = false }: FlowDiagramProps) {
+  const { showAmountSearchResults, amountSearchParams } = useTransactionSearchUsWiresContext()
   const [showSearchBox, setShowSearchBox] = useState(true)
 
-  const {
-    nodes: flowNodes,
-    edges: flowEdges,
-    isLoading,
-    error,
-    sectionTimings,
-    totalProcessingTime,
-    splunkData,
-    refetch,
-  } = useFlowDataBackEnd()
+  const { sectionTimings, totalProcessingTime, splunkData, isLoading, error, refetch } = useFlowDataBackEnd()
 
   const [isShowHiden, setIsShowHiden] = useState(isMonitoringMode)
 
