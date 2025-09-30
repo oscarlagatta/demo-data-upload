@@ -27,9 +27,8 @@ import { computeTrafficStatusColors } from "@/domains/payment-health/utils/traff
 import { updateNodePositions, calculateCanvasHeight } from "@/domains/payment-health/utils/flow-layout-utils"
 import { findNodeConnections, getConnectedSystemNames } from "@/domains/payment-health/utils/flow-connection-utils"
 import type { ActionType, TableModeState, FlowProps } from "@/domains/payment-health/types/flow-diagram-types"
-import SplunkTableUsWires from "@/domains/payment-health/components/tables/splunk-table-us-wires/splunk-table-us-wires"
+import SplunkTableUsWiresBackend from "@/domains/payment-health/components/tables/splunk-table-us-wires/splunk-table-us-wires-backend"
 import { TransactionDetailsTableAgGrid } from "@/domains/payment-health/components/tables/transaction-details-table-ag-grid/transaction-details-table-ag-grid"
-import { useFlowDataBackEnd } from "@/domains/payment-health/assets/flow-data-us-wires/flow-data-use-wires-back-end"
 
 /**
  * Custom Draggable Panel Component
@@ -158,6 +157,8 @@ const DraggablePanel = ({
  *
  * @param nodeTypes - Custom node type definitions for rendering different node types
  * @param onShowSearchBox - Callback to show the search box interface
+ * @param flowNodes - Array of nodes for the flow diagram from props
+ * @param flowEdges - Array of edges for the flow diagram from props
  * @param splunkData - Real-time data from Splunk for traffic status and metrics
  * @param sectionTimings - Performance timing data for each section/node
  * @param totalProcessingTime - Total time for the entire processing pipeline
@@ -168,6 +169,8 @@ const DraggablePanel = ({
 export const FlowUsWires = ({
   nodeTypes,
   onShowSearchBox,
+  flowNodes,
+  flowEdges,
   splunkData,
   sectionTimings,
   totalProcessingTime,
@@ -198,9 +201,6 @@ export const FlowUsWires = ({
   // ReactFlow store hook for canvas width
   const width = useStore((state) => state.width)
   const isAuthorized = true // Authorization state (currently hardcoded)
-
-  // Backend data hook for flow structure and configuration
-  const { nodes: flowNodes, edges: flowEdges } = useFlowDataBackEnd()
 
   // Derived state for loading and success conditions
   const isFetching = isLoading
@@ -288,9 +288,15 @@ export const FlowUsWires = ({
    * Merges backend flow structure with real-time performance data
    */
   useEffect(() => {
-    if (flowNodes.length > 0) {
+    console.log(
+      "[v0] useEffect triggered - flowNodes length:",
+      flowNodes?.length || 0,
+      "sectionTimings:",
+      !!sectionTimings,
+    )
+
+    if (flowNodes && Array.isArray(flowNodes) && flowNodes.length > 0) {
       const nodesWithTiming = flowNodes.map((node) => {
-        // Add timing data to background nodes (performance sections)
         if (node.type === "background" && sectionTimings?.[node.id]) {
           return {
             ...node,
@@ -303,7 +309,31 @@ export const FlowUsWires = ({
         }
         return node
       })
-      setNodes(nodesWithTiming)
+
+      setNodes((prevNodes) => {
+        if (prevNodes.length !== nodesWithTiming.length) {
+          console.log("[v0] Updating nodes with", nodesWithTiming.length, "nodes")
+          return nodesWithTiming
+        }
+
+        // Deep comparison for node data changes
+        const hasChanges = nodesWithTiming.some((newNode, index) => {
+          const prevNode = prevNodes[index]
+          return (
+            !prevNode || prevNode.id !== newNode.id || JSON.stringify(prevNode.data) !== JSON.stringify(newNode.data)
+          )
+        })
+
+        if (hasChanges) {
+          console.log("[v0] Updating nodes with", nodesWithTiming.length, "nodes")
+          return nodesWithTiming
+        }
+
+        return prevNodes
+      })
+    } else if (!flowNodes || flowNodes.length === 0) {
+      console.log("[v0] No flowNodes available, clearing nodes")
+      setNodes((prevNodes) => (prevNodes.length > 0 ? [] : prevNodes))
     }
   }, [flowNodes, sectionTimings])
 
@@ -312,8 +342,36 @@ export const FlowUsWires = ({
    * Sets up the connection structure for the flow diagram
    */
   useEffect(() => {
-    if (flowEdges.length > 0) {
-      setEdges(flowEdges)
+    console.log("[v0] useEffect for edges triggered - flowEdges length:", flowEdges?.length || 0)
+
+    if (flowEdges && Array.isArray(flowEdges) && flowEdges.length > 0) {
+      setEdges((prevEdges) => {
+        if (prevEdges.length !== flowEdges.length) {
+          console.log("[v0] Updating edges with", flowEdges.length, "edges")
+          return flowEdges
+        }
+
+        // Deep comparison for edge changes
+        const hasChanges = flowEdges.some((newEdge, index) => {
+          const prevEdge = prevEdges[index]
+          return (
+            !prevEdge ||
+            prevEdge.id !== newEdge.id ||
+            prevEdge.source !== newEdge.source ||
+            prevEdge.target !== newEdge.target
+          )
+        })
+
+        if (hasChanges) {
+          console.log("[v0] Updating edges with", flowEdges.length, "edges")
+          return flowEdges
+        }
+
+        return prevEdges
+      })
+    } else if (!flowEdges || flowEdges.length === 0) {
+      console.log("[v0] No flowEdges available, clearing edges")
+      setEdges((prevEdges) => (prevEdges.length > 0 ? [] : prevEdges))
     }
   }, [flowEdges])
 
@@ -322,7 +380,7 @@ export const FlowUsWires = ({
    * Ensures responsive layout that adapts to different screen sizes
    */
   useEffect(() => {
-    if (width > 0 && flowNodes.length > 0) {
+    if (width > 0 && flowNodes && flowNodes.length > 0) {
       setNodes((currentNodes) => updateNodePositions(currentNodes, flowNodes, width))
     }
   }, [width, flowNodes])
@@ -567,10 +625,19 @@ export const FlowUsWires = ({
   return (
     <div className="relative h-full w-full" style={{ height: `${canvasHeight}px` }}>
       {tableMode.show ? (
-        // Table mode for detailed transaction data
-        <SplunkTableUsWires
+        <SplunkTableUsWiresBackend
           aitNum={tableMode.aitNum!}
           action={tableMode.action!}
+          splunkDatas={
+            splunkData?.find((node) => {
+              // Find the node that matches the selected AIT
+              const nodeSplunkData = node.splunkDatas?.[0]
+              return (
+                nodeSplunkData &&
+                (nodeSplunkData.aiT_NUM === tableMode.aitNum || nodeSplunkData.aIT_NUM === tableMode.aitNum)
+              )
+            })?.splunkDatas || []
+          }
           onBack={() => {
             setTableMode({
               show: false,

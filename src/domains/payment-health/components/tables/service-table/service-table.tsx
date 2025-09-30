@@ -1,3 +1,7 @@
+// This component was causing "ServiceStatus is not defined" errors and needs to be removed
+// for debugging purposes to create a clean slate for diagnosis
+
+/*
 // checked
 "use client"
 import { useMemo, useState } from "react"
@@ -9,7 +13,7 @@ import "@ag-grid-community/styles/ag-grid.css"
 import "@ag-grid-community/styles/ag-theme-quartz.css"
 import { MasterDetailModule } from "@ag-grid-enterprise/master-detail"
 
-import { AlertTriangle } from "lucide-react"
+import { AlertTriangle } from 'lucide-react'
 
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -140,6 +144,21 @@ const ServiceTable = () => {
         paginationPageSizeSelector={[10, 20, 50]}
         animateRows={true}
       />
+    </div>
+  )
+}
+
+export default ServiceTable
+*/
+
+// This allows the application to continue running while the ServiceStatus error is being diagnosed
+const ServiceTable = () => {
+  return (
+    <div className="flex items-center justify-center p-8">
+      <div className="text-center">
+        <h2 className="text-lg font-semibold text-gray-600">ServiceTable Temporarily Disabled</h2>
+        <p className="text-sm text-gray-500 mt-2">Component removed for debugging ServiceStatus error</p>
+      </div>
     </div>
   )
 }

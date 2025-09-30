@@ -1,4 +1,3 @@
-// checked
 "use client"
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react"
 import Draggable from "react-draggable"
@@ -34,7 +33,7 @@ import { useTransactionSearchUsWiresContext } from "@/domains/payment-health/pro
 import { computeTrafficStatusColors } from "@/domains/payment-health/utils/traffic-status-utils"
 import { InfoSection } from "../../../../indicators/info-section/info-section"
 import PaymentSearchBoxUsWires from "@/domains/payment-health/components/search/payment-search-box-us-wires/payment-search-box-us-wires"
-import SplunkTableUsWires from "@/domains/payment-health/components/tables/splunk-table-us-wires/splunk-table-us-wires"
+import SplunkTableUsWiresBackend from "@/domains/payment-health/components/tables/splunk-table-us-wires/splunk-table-us-wires-backend"
 import { TransactionDetailsTableAgGrid } from "@/domains/payment-health/components/tables/transaction-details-table-ag-grid/transaction-details-table-ag-grid"
 import CustomNodeUsWires from "@/domains/payment-health/components/flow/nodes/custom-nodes-us-wires/custom-node-us-wires"
 import SectionBackgroundNode from "@/domains/payment-health/components/flow/nodes/expandable-charts/section-background-node"
@@ -476,9 +475,19 @@ const Flow = ({
     <div className="relative h-full w-full" style={{ height: `${canvasHeight}px` }}>
       {/*If table mode is on, render the AG Grid and hide flow*/}
       {tableMode.show ? (
-        <SplunkTableUsWires
+        <SplunkTableUsWiresBackend
           aitNum={tableMode.aitNum!}
           action={tableMode.action!}
+          splunkDatas={
+            splunkData?.find((node) => {
+              // Find the node that matches the selected AIT
+              const nodeSplunkData = node.splunkDatas?.[0]
+              return (
+                nodeSplunkData &&
+                (nodeSplunkData.aiT_NUM === tableMode.aitNum || nodeSplunkData.aIT_NUM === tableMode.aitNum)
+              )
+            })?.splunkDatas || []
+          }
           onBack={() => {
             setTableMode({
               show: false,
