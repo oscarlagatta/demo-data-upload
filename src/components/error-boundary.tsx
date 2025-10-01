@@ -3,6 +3,10 @@
 import { Component, type ErrorInfo, type ReactNode } from "react"
 import { AlertTriangle, RefreshCw, Home } from "lucide-react"
 
+// ============================================================================
+// Types and Interfaces
+// ============================================================================
+
 interface ErrorBoundaryProps {
   children: ReactNode
   fallback?: ReactNode
@@ -16,6 +20,10 @@ interface ErrorBoundaryState {
   errorInfo: ErrorInfo | null
 }
 
+// ============================================================================
+// ErrorBoundary Class Component
+// ============================================================================
+
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props)
@@ -27,38 +35,32 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
-    // Update state so the next render will show the fallback UI
     return {
       hasError: true,
       error,
     }
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Log error details for debugging
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     console.error("[v0] Error caught by ErrorBoundary:", error)
     console.error("[v0] Error info:", errorInfo)
 
-    // Update state with error info
     this.setState({
       errorInfo,
     })
 
-    // Call optional error handler
     if (this.props.onError) {
       this.props.onError(error, errorInfo)
     }
   }
 
   handleReset = (): void => {
-    // Reset error state
     this.setState({
       hasError: false,
       error: null,
       errorInfo: null,
     })
 
-    // Call optional reset handler
     if (this.props.onReset) {
       this.props.onReset()
     }
@@ -69,35 +71,29 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     window.location.href = "/"
   }
 
-  render(): ReactNode {
+  override render(): ReactNode {
     if (this.state.hasError) {
-      // Use custom fallback if provided
       if (this.props.fallback) {
         return this.props.fallback
       }
 
-      // Default fallback UI
       return (
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
           <div className="max-w-2xl w-full">
             <div className="bg-card border border-border rounded-lg shadow-lg p-8">
-              {/* Error Icon */}
               <div className="flex justify-center mb-6">
                 <div className="rounded-full bg-destructive/10 p-4">
                   <AlertTriangle className="h-12 w-12 text-destructive" />
                 </div>
               </div>
 
-              {/* Error Title */}
               <h1 className="text-3xl font-bold text-center text-foreground mb-4">Oops! Something went wrong</h1>
 
-              {/* Error Description */}
               <p className="text-center text-muted-foreground mb-8">
                 We encountered an unexpected error. Don't worry, your data is safe. You can try refreshing the page or
                 return to the home page.
               </p>
 
-              {/* Error Details (Development Only) */}
               {process.env.NODE_ENV === "development" && this.state.error && (
                 <div className="mb-8 bg-muted rounded-lg p-4 border border-border">
                   <h2 className="text-sm font-semibold text-foreground mb-2">Error Details (Development Only):</h2>
@@ -118,7 +114,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                 </div>
               )}
 
-              {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
                   onClick={this.handleReset}
@@ -145,4 +140,33 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 }
 
+// ============================================================================
+// ErrorBoundaryWrapper Component
+// ============================================================================
+
+interface ErrorBoundaryWrapperProps {
+  children: ReactNode
+}
+
+export function ErrorBoundaryWrapper({ children }: ErrorBoundaryWrapperProps) {
+  const handleError = (error: Error) => {
+    console.error("[v0] Application error:", error)
+  }
+
+  const handleReset = () => {
+    console.log("[v0] Error boundary reset")
+  }
+
+  return (
+    <ErrorBoundary onError={handleError} onReset={handleReset}>
+      {children}
+    </ErrorBoundary>
+  )
+}
+
+// ============================================================================
+// Exports
+// ============================================================================
+
 export default ErrorBoundary
+export { ErrorBoundary }
