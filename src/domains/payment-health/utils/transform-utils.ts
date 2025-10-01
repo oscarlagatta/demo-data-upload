@@ -52,7 +52,6 @@ export function transformApiData(
         target: t,
         type: "smoothstep",
         style: edgeStyle,
-        markerStart: marker,
         markerEnd: marker,
       }))
     } else {
@@ -62,7 +61,6 @@ export function transformApiData(
           target: target,
           type: "smoothstep",
           style: edgeStyle,
-          markerStart: marker,
           markerEnd: marker,
         },
       ]
@@ -152,27 +150,48 @@ export function transformEnhancedApiData(
     })
     .filter((n): n is AppNode => n !== null)
 
+  const edgeSet = new Set<string>()
   const transformedEdges = apiData.systemConnections.flatMap((connection: SystemConnection) => {
     const { source, target } = connection
     if (Array.isArray(target)) {
-      return target.map((t) => ({
-        id: `${source}-${t}`,
-        source,
-        target: t,
-        type: "smoothstep",
-        style: edgeStyle,
-        markerStart: marker,
-        markerEnd: marker,
-      }))
+      return target
+        .map((t) => {
+          const edgeId = `${source}-${t}`
+          const reverseEdgeId = `${t}-${source}`
+
+          // Skip if reverse edge already exists
+          if (edgeSet.has(reverseEdgeId)) {
+            return null
+          }
+
+          edgeSet.add(edgeId)
+          return {
+            id: edgeId,
+            source,
+            target: t,
+            type: "smoothstep",
+            style: edgeStyle,
+            markerEnd: marker,
+          }
+        })
+        .filter((edge): edge is NonNullable<typeof edge> => edge !== null)
     } else {
+      const edgeId = `${source}-${target}`
+      const reverseEdgeId = `${target}-${source}`
+
+      // Skip if reverse edge already exists
+      if (edgeSet.has(reverseEdgeId)) {
+        return []
+      }
+
+      edgeSet.add(edgeId)
       return [
         {
-          id: `${source}-${target}`,
+          id: edgeId,
           source,
           target: target as string,
           type: "smoothstep",
           style: edgeStyle,
-          markerStart: marker,
           markerEnd: marker,
         },
       ]

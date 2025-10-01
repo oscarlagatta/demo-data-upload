@@ -1,4 +1,3 @@
-// checked
 "use client"
 
 import type React from "react"
@@ -31,6 +30,8 @@ type CustomNodeData = {
   isDimmed?: boolean
   onClick?: (nodeId: string) => void
   onActionClick?: (aitNum: string, action: ActionType) => void
+  currentThruputTime30?: number
+  averageThruputTime30?: number
 }
 
 type CustomNodeType = Node<CustomNodeData>
@@ -120,6 +121,8 @@ const CustomNodeUsWires = ({
   // Convert colors to CSS classes for styling
   const trendColorClass = getTrendColorClass(trendColor)
   const trafficStatusColorClass = getTrafficStatusColorClass(trafficStatusColor)
+
+  const averageThroughputTime = data.averageThruputTime30
 
   /**
    * Handle node click interactions
@@ -258,6 +261,11 @@ const CustomNodeUsWires = ({
         <CardHeader className="p-2">
           <CardTitle className="text-center text-xs font-bold whitespace-nowrap">{data.title}</CardTitle>
           <p className="text-muted-foreground text-center text-[10px]">{data.subtext}</p>
+          {averageThroughputTime !== undefined && averageThroughputTime > 0 && (
+            <p className="text-center text-[9px] text-blue-600 font-medium mt-0.5">
+              Avg: {averageThroughputTime.toFixed(2)}ms
+            </p>
+          )}
         </CardHeader>
 
         {/* Card content with action buttons */}
