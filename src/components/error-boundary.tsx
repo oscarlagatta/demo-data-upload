@@ -3,10 +3,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react"
 import { AlertTriangle, RefreshCw, Home } from "lucide-react"
 
-// ============================================================================
-// Types and Interfaces
-// ============================================================================
-
 interface ErrorBoundaryProps {
   children: ReactNode
   fallback?: ReactNode
@@ -19,10 +15,6 @@ interface ErrorBoundaryState {
   error: Error | null
   errorInfo: ErrorInfo | null
 }
-
-// ============================================================================
-// ErrorBoundary Class Component
-// ============================================================================
 
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
@@ -140,15 +132,11 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 }
 
-// ============================================================================
-// ErrorBoundaryWrapper Component
-// ============================================================================
-
 interface ErrorBoundaryWrapperProps {
   children: ReactNode
 }
 
-export function ErrorBoundaryWrapper({ children }: ErrorBoundaryWrapperProps) {
+function ErrorBoundaryWrapper({ children }: ErrorBoundaryWrapperProps) {
   const handleError = (error: Error) => {
     console.error("[v0] Application error:", error)
   }
@@ -164,9 +152,5 @@ export function ErrorBoundaryWrapper({ children }: ErrorBoundaryWrapperProps) {
   )
 }
 
-// ============================================================================
-// Exports
-// ============================================================================
-
 export default ErrorBoundary
-export { ErrorBoundary }
+export { ErrorBoundary, ErrorBoundaryWrapper }
