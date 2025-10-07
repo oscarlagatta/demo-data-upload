@@ -48,11 +48,20 @@ export function FlowLegend() {
                 <span className="font-medium">Yellow:</span> Warning (traffic not flowing OR off-trend)
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-red-500" />
-              <span className="text-foreground">
-                <span className="font-medium">Red:</span> Critical (all three conditions met)
-              </span>
+            <div className="flex items-start gap-2">
+              <div className="mt-0.5 h-3 w-3 shrink-0 rounded-full bg-red-500" />
+              <div className="text-foreground">
+                <div className="font-medium">Red: Critical</div>
+                <div className="ml-2 mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+                  All three conditions met:
+                  <br />
+                  1. Traffic not flowing
+                  <br />
+                  2. Off-trend pattern
+                  <br />
+                  3. High variation (|STD| &gt; 9)
+                </div>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-gray-400" />
