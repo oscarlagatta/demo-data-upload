@@ -29,6 +29,7 @@ import { findNodeConnections, getConnectedSystemNames } from "@/domains/payment-
 import type { ActionType, TableModeState, FlowProps } from "@/domains/payment-health/types/flow-diagram-types"
 import SplunkTableUsWiresBackend from "@/domains/payment-health/components/tables/splunk-table-us-wires/splunk-table-us-wires-backend"
 import { TransactionDetailsTableAgGrid } from "@/domains/payment-health/components/tables/transaction-details-table-ag-grid/transaction-details-table-ag-grid"
+import { FlowLegend } from "@/domains/payment-health/components/flow/legend/flow-legend"
 
 /**
  * Custom Draggable Panel Component
@@ -721,6 +722,9 @@ export const FlowUsWires = ({
               </div>
             </DraggablePanel>
           )}
+
+          {/* FlowLegend component in bottom-right corner */}
+          <FlowLegend />
         </>
       )}
     </div>
