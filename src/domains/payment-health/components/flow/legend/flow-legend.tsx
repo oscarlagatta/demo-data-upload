@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Info, ChevronDown, ChevronUp, X, HelpCircle } from "lucide-react"
+import { Info, ChevronDown, ChevronUp, X, BookOpen } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -30,13 +30,30 @@ export function FlowLegend() {
       <div className="fixed bottom-20 right-4 z-30 animate-in fade-in slide-in-from-bottom-2 duration-300 sm:bottom-24">
         <Button
           onClick={() => setIsHidden(false)}
-          className="group h-14 gap-2 rounded-full shadow-lg transition-all hover:gap-3 hover:pr-5"
+          className="group relative h-16 gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 px-5 shadow-xl ring-2 ring-blue-400/30 transition-all hover:scale-105 hover:from-blue-700 hover:to-blue-600 hover:shadow-2xl hover:ring-blue-400/50 active:scale-95"
           size="lg"
-          variant="default"
         >
-          <HelpCircle className="h-5 w-5 transition-transform group-hover:scale-110" />
-          <span className="text-sm font-medium">Show Legend</span>
-          <span className="sr-only">Show flow diagram legend</span>
+          {/* Pulse animation ring for attention */}
+          <span className="absolute inset-0 animate-pulse rounded-2xl bg-blue-400/20" />
+
+          {/* Icon with rotation animation on hover */}
+          <BookOpen className="relative h-6 w-6 transition-all duration-300 group-hover:rotate-12 group-hover:scale-110" />
+
+          {/* Text content */}
+          <div className="relative flex flex-col items-start">
+            <span className="text-sm font-bold leading-tight">Legend</span>
+            <span className="text-xs font-normal opacity-90">Click to view</span>
+          </div>
+
+          {/* Visual indicator badge */}
+          <Badge
+            variant="secondary"
+            className="relative ml-1 h-5 w-5 rounded-full bg-white/20 p-0 text-[10px] font-bold backdrop-blur-sm"
+          >
+            ?
+          </Badge>
+
+          <span className="sr-only">Show flow diagram legend with color explanations</span>
         </Button>
       </div>
     )
