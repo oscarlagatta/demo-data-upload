@@ -1,98 +1,109 @@
-'use client';
+"use client"
 
-import { Info, Clock, TrendingUp, AlertTriangle } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Info, Clock, TrendingUp, AlertTriangle } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface InfoSectionProps {
-  time?: number;
+  time?: number
 }
 
 export function InfoSection({ time = 0 }: InfoSectionProps) {
   const getPerformanceStatus = (totalTime: number) => {
-    if (totalTime <= 5)
-      return { status: 'excellent', color: 'green', icon: TrendingUp };
-    if (totalTime <= 15) return { status: 'good', color: 'blue', icon: Clock };
-    if (totalTime <= 30)
-      return { status: 'warning', color: 'yellow', icon: AlertTriangle };
-    return { status: 'critical', color: 'red', icon: AlertTriangle };
-  };
+    if (totalTime <= 5) return { status: "excellent", color: "green", icon: TrendingUp }
+    if (totalTime <= 15) return { status: "good", color: "blue", icon: Clock }
+    if (totalTime <= 30) return { status: "warning", color: "yellow", icon: AlertTriangle }
+    return { status: "critical", color: "red", icon: AlertTriangle }
+  }
 
-  const performance = getPerformanceStatus(time);
-  const StatusIcon = performance.icon;
+  const performance = getPerformanceStatus(time)
+  const StatusIcon = performance.icon
 
   const getStatusStyles = (color: string) => {
     switch (color) {
-      case 'green':
-        return 'bg-green-50 border-green-200 text-green-900';
-      case 'blue':
-        return 'bg-blue-50 border-blue-200 text-blue-900';
-      case 'yellow':
-        return 'bg-yellow-50 border-yellow-200 text-yellow-900';
-      case 'red':
-        return 'bg-red-50 border-red-200 text-red-900';
+      case "green":
+        return "bg-green-50 border-green-200 text-green-900"
+      case "blue":
+        return "bg-blue-50 border-blue-200 text-blue-900"
+      case "yellow":
+        return "bg-yellow-50 border-yellow-200 text-yellow-900"
+      case "red":
+        return "bg-red-50 border-red-200 text-red-900"
       default:
-        return 'bg-blue-50 border-blue-200 text-blue-900';
+        return "bg-blue-50 border-blue-200 text-blue-900"
     }
-  };
+  }
 
   const getIconStyles = (color: string) => {
     switch (color) {
-      case 'green':
-        return 'text-green-600';
-      case 'blue':
-        return 'text-blue-600';
-      case 'yellow':
-        return 'text-yellow-600';
-      case 'red':
-        return 'text-red-600';
+      case "green":
+        return "text-green-600"
+      case "blue":
+        return "text-blue-600"
+      case "yellow":
+        return "text-yellow-600"
+      case "red":
+        return "text-red-600"
       default:
-        return 'text-blue-600';
+        return "text-blue-600"
     }
-  };
+  }
 
   const getBadgeStyles = (color: string) => {
     switch (color) {
-      case 'green':
-        return 'bg-green-100 text-green-800 border-green-300';
-      case 'blue':
-        return 'bg-blue-100 text-blue-800 border-blue-300';
-      case 'yellow':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-      case 'red':
-        return 'bg-red-100 text-red-800 border-red-300';
+      case "green":
+        return "bg-green-100 text-green-800 border-green-300"
+      case "blue":
+        return "bg-blue-100 text-blue-800 border-blue-300"
+      case "yellow":
+        return "bg-yellow-100 text-yellow-800 border-yellow-300"
+      case "red":
+        return "bg-red-100 text-red-800 border-red-300"
       default:
-        return 'bg-blue-100 text-blue-800 border-blue-300';
+        return "bg-blue-100 text-blue-800 border-blue-300"
     }
-  };
+  }
 
   return (
-    <Card className={`${getStatusStyles(performance.color)} shadow-sm`}>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2">
-              <Info className={`h-5 w-5 ${getIconStyles(performance.color)}`} />
-              <span className="text-sm font-medium">
-                The Total Average Processing Time for transactions in the US is
-              </span>
+    <div className="space-y-3">
+      <Card className={`${getStatusStyles(performance.color)} shadow-sm`}>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
+                <Info className={`h-5 w-5 ${getIconStyles(performance.color)}`} />
+                <span className="text-sm font-medium">
+                  The Total Average Processing Time for transactions in the US is
+                </span>
+              </div>
+              <div
+                className={`flex items-center space-x-2 rounded-full border px-3 py-1 ${getBadgeStyles(performance.color)}`}
+              >
+                <StatusIcon className="h-4 w-4" />
+                <span className="text-lg font-bold">{time} seconds</span>
+              </div>
             </div>
-            <div
-              className={`flex items-center space-x-2 rounded-full border px-3 py-1 ${getBadgeStyles(performance.color)}`}
-            >
-              <StatusIcon className="h-4 w-4" />
-              <span className="text-lg font-bold">{time} seconds</span>
-            </div>
+
+            <div className="text-xs font-medium capitalize opacity-75">{performance.status} Performance</div>
           </div>
 
-          <div className="text-xs font-medium capitalize opacity-75">
-            {performance.status} Performance
+          <div className="mt-2 text-xs opacity-60">
+            View individual section timing in the flow diagram headers above
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        <div className="mt-2 text-xs opacity-60">
-          View individual section timing in the flow diagram headers above
-        </div>
-      </CardContent>
-    </Card>
-  );
+      {time === 0 && (
+        <Alert className="bg-amber-50 border-amber-200 text-amber-900">
+          <Clock className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-sm">
+            <span className="font-semibold">Data Availability Notice:</span> The average processing time is currently
+            showing as 0 seconds because transaction data becomes available only at specific times throughout the day.
+            During hours when data has not yet been received or processed, the average cannot be calculated and defaults
+            to zero. Please check back later when data collection for the current period is complete.
+          </AlertDescription>
+        </Alert>
+      )}
+    </div>
+  )
 }
