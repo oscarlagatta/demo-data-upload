@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Info, ChevronDown, ChevronUp, X } from "lucide-react"
+import { Info, ChevronDown, ChevronUp, X, HelpCircle } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -13,33 +13,37 @@ import { Button } from "@/components/ui/button"
  * Positioned in the bottom-right corner of the viewport with adaptive sizing and collapsible sections.
  *
  * Features:
+ * - Complete hide/show toggle with smooth animations
  * - Collapsible design to minimize space usage
  * - Responsive sizing across different screen widths
- * - Can be minimized to a compact button on smaller screens
  * - Fixed positioning that remains visible during scrolling
  * - Accessible color indicators with text descriptions
  * - High z-index to stay above diagram elements
+ * - Clear visual cues for all interaction states
  */
 export function FlowLegend() {
   const [isExpanded, setIsExpanded] = useState(true)
-  const [isMinimized, setIsMinimized] = useState(false)
+  const [isHidden, setIsHidden] = useState(false)
 
-  if (isMinimized) {
+  if (isHidden) {
     return (
-      <Button
-        onClick={() => setIsMinimized(false)}
-        className="fixed bottom-4 right-4 z-30 h-12 w-12 rounded-full shadow-lg"
-        size="icon"
-        variant="default"
-      >
-        <Info className="h-5 w-5" />
-        <span className="sr-only">Show legend</span>
-      </Button>
+      <div className="fixed bottom-20 right-4 z-30 animate-in fade-in slide-in-from-bottom-2 duration-300 sm:bottom-24">
+        <Button
+          onClick={() => setIsHidden(false)}
+          className="group h-14 gap-2 rounded-full shadow-lg transition-all hover:gap-3 hover:pr-5"
+          size="lg"
+          variant="default"
+        >
+          <HelpCircle className="h-5 w-5 transition-transform group-hover:scale-110" />
+          <span className="text-sm font-medium">Show Legend</span>
+          <span className="sr-only">Show flow diagram legend</span>
+        </Button>
+      </div>
     )
   }
 
   return (
-    <Card className="fixed bottom-4 right-4 z-30 w-72 shadow-lg transition-all duration-200 sm:w-80 lg:w-[22rem]">
+    <Card className="fixed bottom-20 right-4 z-30 w-72 animate-in fade-in slide-in-from-bottom-4 shadow-lg duration-300 sm:bottom-24 sm:w-80 lg:w-[22rem]">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -47,13 +51,29 @@ export function FlowLegend() {
             <CardTitle className="text-sm">Flow Diagram Legend</CardTitle>
           </div>
           <div className="flex items-center gap-1">
-            <Button onClick={() => setIsExpanded(!isExpanded)} variant="ghost" size="icon" className="h-6 w-6">
-              {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+            <Button
+              onClick={() => setIsExpanded(!isExpanded)}
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 transition-colors hover:bg-muted"
+              title={isExpanded ? "Collapse legend" : "Expand legend"}
+            >
+              {isExpanded ? (
+                <ChevronDown className="h-4 w-4 transition-transform" />
+              ) : (
+                <ChevronUp className="h-4 w-4 transition-transform" />
+              )}
               <span className="sr-only">{isExpanded ? "Collapse" : "Expand"} legend</span>
             </Button>
-            <Button onClick={() => setIsMinimized(true)} variant="ghost" size="icon" className="h-6 w-6">
-              <X className="h-3 w-3" />
-              <span className="sr-only">Minimize legend</span>
+            <Button
+              onClick={() => setIsHidden(true)}
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 transition-colors hover:bg-muted hover:text-destructive"
+              title="Hide legend"
+            >
+              <X className="h-4 w-4 transition-transform hover:scale-110" />
+              <span className="sr-only">Hide legend</span>
             </Button>
           </div>
         </div>
@@ -61,7 +81,7 @@ export function FlowLegend() {
       </CardHeader>
 
       {isExpanded && (
-        <CardContent className="space-y-3 text-xs sm:space-y-4">
+        <CardContent className="animate-in fade-in slide-in-from-top-2 space-y-3 text-xs duration-200 sm:space-y-4">
           {/* Traffic Status Section */}
           <div className="space-y-2">
             <Badge variant="outline" className="text-xs font-semibold">
