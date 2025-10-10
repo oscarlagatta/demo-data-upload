@@ -12,44 +12,44 @@ import { Skeleton } from "@/components/ui/skeleton"
  * - Displays skeleton placeholders positioned where actual nodes will appear
  * - Mimics the actual flow diagram layout structure
  * - Provides a more seamless loading experience than a simple spinner
+ * - Fully responsive and fills the entire container
  */
 export function FlowSkeletonLoader() {
-  // Define skeleton node positions that match the typical flow diagram layout
-  // These positions represent the main processing sections and nodes
+  // Define skeleton node positions using percentages for responsive layout
   const skeletonNodes = [
     // Initiation section (left side)
-    { id: "init-1", x: 50, y: 100, width: 180, height: 120 },
-    { id: "init-2", x: 50, y: 240, width: 180, height: 120 },
-    { id: "init-3", x: 50, y: 380, width: 180, height: 120 },
+    { id: "init-1", x: "5%", y: "15%", width: "15%", height: "18%" },
+    { id: "init-2", x: "5%", y: "40%", width: "15%", height: "18%" },
+    { id: "init-3", x: "5%", y: "65%", width: "15%", height: "18%" },
 
     // Validation section (center-left)
-    { id: "val-1", x: 280, y: 100, width: 180, height: 120 },
-    { id: "val-2", x: 280, y: 240, width: 180, height: 120 },
-    { id: "val-3", x: 280, y: 380, width: 180, height: 120 },
+    { id: "val-1", x: "23%", y: "15%", width: "15%", height: "18%" },
+    { id: "val-2", x: "23%", y: "40%", width: "15%", height: "18%" },
+    { id: "val-3", x: "23%", y: "65%", width: "15%", height: "18%" },
 
     // Processing section (center)
-    { id: "proc-1", x: 510, y: 100, width: 180, height: 120 },
-    { id: "proc-2", x: 510, y: 240, width: 180, height: 120 },
-    { id: "proc-3", x: 510, y: 380, width: 180, height: 120 },
+    { id: "proc-1", x: "41%", y: "15%", width: "15%", height: "18%" },
+    { id: "proc-2", x: "41%", y: "40%", width: "15%", height: "18%" },
+    { id: "proc-3", x: "41%", y: "65%", width: "15%", height: "18%" },
 
     // Settlement section (center-right)
-    { id: "settle-1", x: 740, y: 100, width: 180, height: 120 },
-    { id: "settle-2", x: 740, y: 240, width: 180, height: 120 },
-    { id: "settle-3", x: 740, y: 380, width: 180, height: 120 },
+    { id: "settle-1", x: "59%", y: "15%", width: "15%", height: "18%" },
+    { id: "settle-2", x: "59%", y: "40%", width: "15%", height: "18%" },
+    { id: "settle-3", x: "59%", y: "65%", width: "15%", height: "18%" },
 
     // Completion section (right side)
-    { id: "comp-1", x: 970, y: 100, width: 180, height: 120 },
-    { id: "comp-2", x: 970, y: 240, width: 180, height: 120 },
-    { id: "comp-3", x: 970, y: 380, width: 180, height: 120 },
+    { id: "comp-1", x: "77%", y: "15%", width: "15%", height: "18%" },
+    { id: "comp-2", x: "77%", y: "40%", width: "15%", height: "18%" },
+    { id: "comp-3", x: "77%", y: "65%", width: "15%", height: "18%" },
   ]
 
-  // Section background placeholders
+  // Section background placeholders using percentages
   const sectionBackgrounds = [
-    { id: "bg-1", x: 30, y: 60, width: 220, height: 460, label: "Initiation" },
-    { id: "bg-2", x: 260, y: 60, width: 220, height: 460, label: "Validation" },
-    { id: "bg-3", x: 490, y: 60, width: 220, height: 460, label: "Processing" },
-    { id: "bg-4", x: 720, y: 60, width: 220, height: 460, label: "Settlement" },
-    { id: "bg-5", x: 950, y: 60, width: 220, height: 460, label: "Completion" },
+    { id: "bg-1", x: "3%", y: "8%", width: "17%", height: "80%", label: "Initiation" },
+    { id: "bg-2", x: "21%", y: "8%", width: "17%", height: "80%", label: "Validation" },
+    { id: "bg-3", x: "39%", y: "8%", width: "17%", height: "80%", label: "Processing" },
+    { id: "bg-4", x: "57%", y: "8%", width: "17%", height: "80%", label: "Settlement" },
+    { id: "bg-5", x: "75%", y: "8%", width: "17%", height: "80%", label: "Completion" },
   ]
 
   return (
@@ -75,16 +75,16 @@ export function FlowSkeletonLoader() {
       </div>
 
       {/* Section background skeletons */}
-      <div className="relative h-full w-full">
+      <div className="absolute inset-0">
         {sectionBackgrounds.map((section) => (
           <div
             key={section.id}
             className="absolute rounded-lg border-2 border-dashed border-gray-300 bg-white/50 p-3"
             style={{
-              left: `${section.x}px`,
-              top: `${section.y}px`,
-              width: `${section.width}px`,
-              height: `${section.height}px`,
+              left: section.x,
+              top: section.y,
+              width: section.width,
+              height: section.height,
             }}
           >
             <Skeleton className="h-5 w-24" />
@@ -94,16 +94,16 @@ export function FlowSkeletonLoader() {
       </div>
 
       {/* Node skeletons */}
-      <div className="relative h-full w-full">
+      <div className="absolute inset-0">
         {skeletonNodes.map((node) => (
           <div
             key={node.id}
             className="absolute rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm"
             style={{
-              left: `${node.x}px`,
-              top: `${node.y}px`,
-              width: `${node.width}px`,
-              height: `${node.height}px`,
+              left: node.x,
+              top: node.y,
+              width: node.width,
+              height: node.height,
             }}
           >
             {/* Node header skeleton */}
@@ -132,18 +132,18 @@ export function FlowSkeletonLoader() {
       <svg className="pointer-events-none absolute inset-0" style={{ zIndex: 1 }}>
         {/* Horizontal connection lines between sections */}
         {[
-          { x1: 230, y1: 160, x2: 280, y2: 160 },
-          { x1: 230, y1: 300, x2: 280, y2: 300 },
-          { x1: 230, y1: 440, x2: 280, y2: 440 },
-          { x1: 460, y1: 160, x2: 510, y2: 160 },
-          { x1: 460, y1: 300, x2: 510, y2: 300 },
-          { x1: 460, y1: 440, x2: 510, y2: 440 },
-          { x1: 690, y1: 160, x2: 740, y2: 160 },
-          { x1: 690, y1: 300, x2: 740, y2: 300 },
-          { x1: 690, y1: 440, x2: 740, y2: 440 },
-          { x1: 920, y1: 160, x2: 970, y2: 160 },
-          { x1: 920, y1: 300, x2: 970, y2: 300 },
-          { x1: 920, y1: 440, x2: 970, y2: 440 },
+          { x1: "20%", y1: "24%", x2: "23%", y2: "24%" },
+          { x1: "20%", y1: "49%", x2: "23%", y2: "49%" },
+          { x1: "20%", y1: "74%", x2: "23%", y2: "74%" },
+          { x1: "38%", y1: "24%", x2: "41%", y2: "24%" },
+          { x1: "38%", y1: "49%", x2: "41%", y2: "49%" },
+          { x1: "38%", y1: "74%", x2: "41%", y2: "74%" },
+          { x1: "56%", y1: "24%", x2: "59%", y2: "24%" },
+          { x1: "56%", y1: "49%", x2: "59%", y2: "49%" },
+          { x1: "56%", y1: "74%", x2: "59%", y2: "74%" },
+          { x1: "74%", y1: "24%", x2: "77%", y2: "24%" },
+          { x1: "74%", y1: "49%", x2: "77%", y2: "49%" },
+          { x1: "74%", y1: "74%", x2: "77%", y2: "74%" },
         ].map((line, index) => (
           <line
             key={index}
