@@ -1,4 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton"
+import { CardLoadingSkeleton } from "../loading-skeleton"
 
 /**
  * FlowSkeletonLoader Component
@@ -136,7 +137,7 @@ export function FlowSkeletonLoader() {
         {skeletonNodes.map((node) => (
           <div
             key={node.id}
-            className="absolute rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm"
+            className="absolute"
             style={{
               left: `${node.x}px`,
               top: `${node.y}px`,
@@ -144,25 +145,7 @@ export function FlowSkeletonLoader() {
               height: `${node.height}px`,
             }}
           >
-            {/* Node header skeleton */}
-            <div className="mb-2 flex items-center justify-between">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-6 w-6 rounded-full" />
-            </div>
-
-            {/* Node content skeleton */}
-            <div className="space-y-2">
-              <Skeleton className="h-3 w-full" />
-              <Skeleton className="h-3 w-3/4" />
-              <Skeleton className="h-3 w-5/6" />
-            </div>
-
-            {/* Node footer skeleton (buttons) */}
-            <div className="mt-3 flex gap-1">
-              <Skeleton className="h-6 w-14 rounded" />
-              <Skeleton className="h-6 w-14 rounded" />
-              <Skeleton className="h-6 w-16 rounded" />
-            </div>
+            <CardLoadingSkeleton className="h-full w-full" />
           </div>
         ))}
       </div>
