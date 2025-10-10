@@ -15,45 +15,54 @@ import { Skeleton } from "@/components/ui/skeleton"
  * - Fully responsive and fills the entire container
  */
 export function FlowSkeletonLoader() {
-  // Define skeleton node positions using percentages for responsive layout
-  const skeletonNodes = [
-    // Initiation section (left side)
-    { id: "init-1", x: "5%", y: "15%", width: "15%", height: "18%" },
-    { id: "init-2", x: "5%", y: "40%", width: "15%", height: "18%" },
-    { id: "init-3", x: "5%", y: "65%", width: "15%", height: "18%" },
-
-    // Validation section (center-left)
-    { id: "val-1", x: "23%", y: "15%", width: "15%", height: "18%" },
-    { id: "val-2", x: "23%", y: "40%", width: "15%", height: "18%" },
-    { id: "val-3", x: "23%", y: "65%", width: "15%", height: "18%" },
-
-    // Processing section (center)
-    { id: "proc-1", x: "41%", y: "15%", width: "15%", height: "18%" },
-    { id: "proc-2", x: "41%", y: "40%", width: "15%", height: "18%" },
-    { id: "proc-3", x: "41%", y: "65%", width: "15%", height: "18%" },
-
-    // Settlement section (center-right)
-    { id: "settle-1", x: "59%", y: "15%", width: "15%", height: "18%" },
-    { id: "settle-2", x: "59%", y: "40%", width: "15%", height: "18%" },
-    { id: "settle-3", x: "59%", y: "65%", width: "15%", height: "18%" },
-
-    // Completion section (right side)
-    { id: "comp-1", x: "77%", y: "15%", width: "15%", height: "18%" },
-    { id: "comp-2", x: "77%", y: "40%", width: "15%", height: "18%" },
-    { id: "comp-3", x: "77%", y: "65%", width: "15%", height: "18%" },
+  const sectionBackgrounds = [
+    { id: "bg-1", x: "2%", y: "5%", width: "18%", height: "90%", label: "Origination" },
+    { id: "bg-2", x: "22%", y: "5%", width: "18%", height: "90%", label: "Payment Validation and Routing" },
+    { id: "bg-3", x: "42%", y: "5%", width: "18%", height: "90%", label: "Middleware" },
+    {
+      id: "bg-4",
+      x: "62%",
+      y: "5%",
+      width: "36%",
+      height: "90%",
+      label: "Payment Processing, Enrollment & Investigation",
+    },
   ]
 
-  // Section background placeholders using percentages
-  const sectionBackgrounds = [
-    { id: "bg-1", x: "3%", y: "8%", width: "17%", height: "80%", label: "Initiation" },
-    { id: "bg-2", x: "21%", y: "8%", width: "17%", height: "80%", label: "Validation" },
-    { id: "bg-3", x: "39%", y: "8%", width: "17%", height: "80%", label: "Processing" },
-    { id: "bg-4", x: "57%", y: "8%", width: "17%", height: "80%", label: "Settlement" },
-    { id: "bg-5", x: "75%", y: "8%", width: "17%", height: "80%", label: "Completion" },
+  const skeletonNodes = [
+    // Origination section (left side) - 4 nodes vertically
+    { id: "init-1", x: "4%", y: "12%", width: "14%", height: "15%" },
+    { id: "init-2", x: "4%", y: "32%", width: "14%", height: "15%" },
+    { id: "init-3", x: "4%", y: "52%", width: "14%", height: "15%" },
+    { id: "init-4", x: "4%", y: "72%", width: "14%", height: "15%" },
+
+    // Payment Validation section - 5 nodes vertically
+    { id: "val-1", x: "24%", y: "10%", width: "14%", height: "12%" },
+    { id: "val-2", x: "24%", y: "26%", width: "14%", height: "12%" },
+    { id: "val-3", x: "24%", y: "42%", width: "14%", height: "12%" },
+    { id: "val-4", x: "24%", y: "58%", width: "14%", height: "12%" },
+    { id: "val-5", x: "24%", y: "74%", width: "14%", height: "12%" },
+
+    // Middleware section - 2 nodes vertically
+    { id: "mid-1", x: "44%", y: "20%", width: "14%", height: "18%" },
+    { id: "mid-2", x: "44%", y: "55%", width: "14%", height: "18%" },
+
+    // Payment Processing section - 6 nodes in 2 columns
+    { id: "proc-1", x: "64%", y: "10%", width: "14%", height: "12%" },
+    { id: "proc-2", x: "64%", y: "26%", width: "14%", height: "12%" },
+    { id: "proc-3", x: "64%", y: "42%", width: "14%", height: "12%" },
+    { id: "proc-4", x: "64%", y: "58%", width: "14%", height: "12%" },
+    { id: "proc-5", x: "64%", y: "74%", width: "14%", height: "12%" },
+
+    { id: "proc-6", x: "82%", y: "10%", width: "14%", height: "12%" },
+    { id: "proc-7", x: "82%", y: "26%", width: "14%", height: "12%" },
+    { id: "proc-8", x: "82%", y: "42%", width: "14%", height: "12%" },
+    { id: "proc-9", x: "82%", y: "58%", width: "14%", height: "12%" },
+    { id: "proc-10", x: "82%", y: "74%", width: "14%", height: "12%" },
   ]
 
   return (
-    <div className="absolute inset-0 h-full w-full overflow-hidden" style={{ background: "#eeeff3ff" }}>
+    <div className="fixed inset-0 h-full w-full overflow-hidden" style={{ background: "#eeeff3ff" }}>
       {/* Background grid matching the actual flow diagram */}
       <div className="absolute inset-0">
         <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -79,7 +88,7 @@ export function FlowSkeletonLoader() {
         {sectionBackgrounds.map((section) => (
           <div
             key={section.id}
-            className="absolute rounded-lg border-2 border-dashed border-gray-300 bg-white/50 p-3"
+            className="absolute rounded-lg border-2 border-gray-200 bg-white/60 p-4"
             style={{
               left: section.x,
               top: section.y,
@@ -87,8 +96,10 @@ export function FlowSkeletonLoader() {
               height: section.height,
             }}
           >
-            <Skeleton className="h-5 w-24" />
-            <Skeleton className="mt-2 h-3 w-16" />
+            <div className="mb-2 flex items-center justify-between border-b border-gray-200 pb-2">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-4 w-16" />
+            </div>
           </div>
         ))}
       </div>
@@ -130,20 +141,31 @@ export function FlowSkeletonLoader() {
 
       {/* Connection line skeletons */}
       <svg className="pointer-events-none absolute inset-0" style={{ zIndex: 1 }}>
-        {/* Horizontal connection lines between sections */}
         {[
-          { x1: "20%", y1: "24%", x2: "23%", y2: "24%" },
-          { x1: "20%", y1: "49%", x2: "23%", y2: "49%" },
-          { x1: "20%", y1: "74%", x2: "23%", y2: "74%" },
-          { x1: "38%", y1: "24%", x2: "41%", y2: "24%" },
-          { x1: "38%", y1: "49%", x2: "41%", y2: "49%" },
-          { x1: "38%", y1: "74%", x2: "41%", y2: "74%" },
-          { x1: "56%", y1: "24%", x2: "59%", y2: "24%" },
-          { x1: "56%", y1: "49%", x2: "59%", y2: "49%" },
-          { x1: "56%", y1: "74%", x2: "59%", y2: "74%" },
-          { x1: "74%", y1: "24%", x2: "77%", y2: "24%" },
-          { x1: "74%", y1: "49%", x2: "77%", y2: "49%" },
-          { x1: "74%", y1: "74%", x2: "77%", y2: "74%" },
+          // Origination to Validation
+          { x1: "18%", y1: "19%", x2: "24%", y2: "16%" },
+          { x1: "18%", y1: "39%", x2: "24%", y2: "32%" },
+          { x1: "18%", y1: "59%", x2: "24%", y2: "48%" },
+          { x1: "18%", y1: "79%", x2: "24%", y2: "64%" },
+
+          // Validation to Middleware
+          { x1: "38%", y1: "16%", x2: "44%", y2: "29%" },
+          { x1: "38%", y1: "32%", x2: "44%", y2: "29%" },
+          { x1: "38%", y1: "48%", x2: "44%", y2: "64%" },
+          { x1: "38%", y1: "64%", x2: "44%", y2: "64%" },
+
+          // Middleware to Processing
+          { x1: "58%", y1: "29%", x2: "64%", y2: "16%" },
+          { x1: "58%", y1: "29%", x2: "64%", y2: "32%" },
+          { x1: "58%", y1: "64%", x2: "64%", y2: "48%" },
+          { x1: "58%", y1: "64%", x2: "64%", y2: "64%" },
+
+          // Processing column 1 to column 2
+          { x1: "78%", y1: "16%", x2: "82%", y2: "16%" },
+          { x1: "78%", y1: "32%", x2: "82%", y2: "32%" },
+          { x1: "78%", y1: "48%", x2: "82%", y2: "48%" },
+          { x1: "78%", y1: "64%", x2: "82%", y2: "64%" },
+          { x1: "78%", y1: "80%", x2: "82%", y2: "80%" },
         ].map((line, index) => (
           <line
             key={index}
