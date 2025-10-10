@@ -594,9 +594,25 @@ export const FlowUsWires = ({
     return null
   }
 
+  const layOutConfig = useMemo(() => {
+    if (!flowNodes || flowNodes.length === 0) return []
+
+    // Find all background nodes which contain section layout information
+    const backgroundNodes = flowNodes.filter((node) => node.type === "background")
+
+    // Map background nodes to layout config format
+    return backgroundNodes.map((node) => ({
+      id: node.id,
+      position: node.position,
+      data: node.data,
+      style: node.style || { width: "350px", height: "960px" },
+      sectionPositions: (node.data as any).sectionPositions || { sections: {} },
+    }))
+  }, [flowNodes])
+
   // Early returns for loading and error states
   if (isLoading) {
-    return <FlowSkeletonLoader />
+    return <FlowSkeletonLoader layOutConfig={layOutConfig} />
   }
 
   if (isError) {

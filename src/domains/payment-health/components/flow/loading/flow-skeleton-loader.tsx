@@ -1,94 +1,123 @@
 import { Skeleton } from "@/components/ui/skeleton"
-import { CardLoadingSkeleton } from "../loading-skeleton"
+import { CardLoadingSkeleton } from "../../loading/loading-skeleton"
 
 /**
  * FlowSkeletonLoader Component
  *
- * Provides a visually accurate loading state for the flow diagram that precisely matches
- * the actual layout configuration from get-wires-flow.json. This skeleton uses the exact
- * pixel positions and dimensions defined in layOutConfig to create a seamless loading experience.
+ * Dynamically generates a loading skeleton that precisely matches the flow diagram layout
+ * by utilizing the layOutConfig structure passed from the parent component.
  *
  * Features:
- * - Exact section backgrounds matching layOutConfig (350px, 350px, 450px, 500px widths)
- * - Node skeletons positioned at precise coordinates from sectionPositions
- * - Total canvas: 1650px width × 960px height
- * - Matches the actual flow diagram structure perfectly
+ * - Dynamic mapping from layOutConfig sectionPositions
+ * - Percentage-based positioning for responsive layouts
+ * - Top offset adjustment for proper vertical alignment
+ * - Exact section backgrounds and node placements
+ * - Seamless integration with actual flow diagram structure
  */
-export function FlowSkeletonLoader() {
-  // Section backgrounds from layOutConfig - exact pixel dimensions
-  const sectionBackgrounds = [
-    {
-      id: "bg-origination",
-      x: 0,
-      y: 0,
-      width: 350,
-      height: 960,
-      label: "Origination",
-    },
-    {
-      id: "bg-validation",
-      x: 350,
-      y: 0,
-      width: 350,
-      height: 960,
-      label: "Payment Validation and Routing",
-    },
-    {
-      id: "bg-middleware",
-      x: 700,
-      y: 0,
-      width: 450,
-      height: 960,
-      label: "Middleware",
-    },
-    {
-      id: "bg-processing",
-      x: 1150,
-      y: 0,
-      width: 500,
-      height: 960,
-      label: "Payment Processing, Sanctions & Investigation",
-    },
-  ]
 
-  // Node skeleton positions from sectionPositions - exact pixel coordinates
-  const skeletonNodes = [
-    // Origination section - 5 nodes at baseX: 50
-    { id: "node-orig-1", x: 50, y: 0, width: 250, height: 160 },
-    { id: "node-orig-2", x: 50, y: 192, width: 250, height: 160 },
-    { id: "node-orig-3", x: 50, y: 384, width: 250, height: 160 },
-    { id: "node-orig-4", x: 50, y: 576, width: 250, height: 160 },
-    { id: "node-orig-5", x: 50, y: 768, width: 250, height: 160 },
+interface SectionPosition {
+  x: number
+  y: number
+}
 
-    // Payment Validation section - 6 nodes at baseX: 425
-    { id: "node-val-1", x: 425, y: 0, width: 250, height: 140 },
-    { id: "node-val-2", x: 425, y: 160, width: 250, height: 140 },
-    { id: "node-val-3", x: 425, y: 320, width: 250, height: 140 },
-    { id: "node-val-4", x: 425, y: 480, width: 250, height: 140 },
-    { id: "node-val-5", x: 425, y: 640, width: 250, height: 140 },
-    { id: "node-val-6", x: 425, y: 800, width: 250, height: 140 },
+interface SectionData {
+  baseX: number
+  positions: SectionPosition[]
+}
 
-    // Middleware section - 3 nodes at baseX: 750
-    { id: "node-mid-1", x: 750, y: 0, width: 350, height: 200 },
-    { id: "node-mid-2", x: 750, y: 240, width: 350, height: 200 },
-    { id: "node-mid-3", x: 750, y: 480, width: 350, height: 200 },
+interface SectionPositions {
+  sections: Record<string, SectionData>
+}
 
-    // Payment Processing section - 6 nodes at baseX: 1200
-    { id: "node-proc-1", x: 1200, y: 0, width: 400, height: 140 },
-    { id: "node-proc-2", x: 1200, y: 160, width: 400, height: 140 },
-    { id: "node-proc-3", x: 1200, y: 320, width: 400, height: 140 },
-    { id: "node-proc-4", x: 1200, y: 480, width: 400, height: 140 },
-    { id: "node-proc-5", x: 1200, y: 640, width: 400, height: 140 },
-    { id: "node-proc-6", x: 1200, y: 800, width: 400, height: 140 },
-  ]
+interface LayoutSection {
+  id: string
+  position: { x: number; y: number }
+  data: { title: string }
+  style: { width: string; height: string }
+  sectionPositions: SectionPositions
+}
+
+interface FlowSkeletonLoaderProps {
+  layOutConfig?: LayoutSection[]
+  canvasWidth?: number
+  canvasHeight?: number
+}
+
+const DEFAULT_CANVAS_WIDTH = 1650
+const DEFAULT_CANVAS_HEIGHT = 960
+const TOP_OFFSET = 50 // Vertical offset for node alignment
+const NODE_WIDTH = 250 // Default node width
+const NODE_HEIGHT = 140 // Default node height
+
+export function FlowSkeletonLoader({
+  layOutConfig = [],
+  canvasWidth = DEFAULT_CANVAS_WIDTH,
+  canvasHeight = DEFAULT_CANVAS_HEIGHT,
+}: FlowSkeletonLoaderProps) {
+  // If no layout config provided, show a simple loading state
+  if (!layOutConfig || layOutConfig.length === 0) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-[#eeeff3ff]">
+        <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-white px-4 py-2 shadow-sm">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+          <span className="text-sm font-medium text-blue-600">Loading flow diagram...</span>
+        </div>
+      </div>
+    )
+  }
+
+  // Generate section backgrounds from layout config
+  const sectionBackgrounds = layOutConfig.map((section) => ({
+    id: section.id,
+    x: section.position.x,
+    y: section.position.y,
+    width: Number.parseInt(section.style.width),
+    height: Number.parseInt(section.style.height),
+    label: section.data.title,
+  }))
+
+  // Generate skeleton nodes from layout config
+  const skeletonNodes = layOutConfig.flatMap((section) => {
+    const sectionKey = Object.keys(section.sectionPositions.sections)[0]
+    const sectionData = section.sectionPositions.sections[sectionKey]
+
+    return sectionData.positions.map((pos, nodeIndex) => {
+      // Determine node dimensions based on section
+      let nodeWidth = NODE_WIDTH
+      let nodeHeight = NODE_HEIGHT
+
+      // Adjust node dimensions for different sections
+      if (section.id === "bg-middleware") {
+        nodeWidth = 350
+        nodeHeight = 180
+      } else if (section.id === "bg-processing") {
+        nodeWidth = 400
+        nodeHeight = 140
+      } else if (section.id === "bg-origination") {
+        nodeHeight = 160
+      }
+
+      return {
+        id: `node-${section.id}-${nodeIndex}`,
+        x: pos.x,
+        y: pos.y + TOP_OFFSET,
+        width: nodeWidth,
+        height: nodeHeight,
+        sectionId: section.id,
+      }
+    })
+  })
+
+  console.log("[v0] FlowSkeletonLoader - Generated sections:", sectionBackgrounds.length)
+  console.log("[v0] FlowSkeletonLoader - Generated nodes:", skeletonNodes.length)
 
   return (
     <div
       className="absolute inset-0 h-full w-full overflow-hidden"
       style={{
         background: "#eeeff3ff",
-        minWidth: "1650px",
-        minHeight: "960px",
+        minWidth: `${canvasWidth}px`,
+        minHeight: `${canvasHeight}px`,
       }}
     >
       {/* Background grid matching ReactFlow */}
@@ -111,7 +140,7 @@ export function FlowSkeletonLoader() {
         </div>
       </div>
 
-      {/* Section background skeletons - exact pixel positions */}
+      {/* Section backgrounds */}
       <div className="absolute inset-0">
         {sectionBackgrounds.map((section) => (
           <div
@@ -132,7 +161,7 @@ export function FlowSkeletonLoader() {
         ))}
       </div>
 
-      {/* Node skeletons - exact pixel positions */}
+      {/* Skeleton nodes */}
       <div className="absolute inset-0">
         {skeletonNodes.map((node) => (
           <div
@@ -155,9 +184,9 @@ export function FlowSkeletonLoader() {
         {/* Origination to Validation connections */}
         <line
           x1="300"
-          y1="80"
+          y1="130"
           x2="425"
-          y2="70"
+          y2="120"
           stroke="#d1d5db"
           strokeWidth="2"
           strokeDasharray="4 4"
@@ -165,9 +194,9 @@ export function FlowSkeletonLoader() {
         />
         <line
           x1="300"
-          y1="272"
+          y1="322"
           x2="425"
-          y2="230"
+          y2="280"
           stroke="#d1d5db"
           strokeWidth="2"
           strokeDasharray="4 4"
@@ -175,29 +204,9 @@ export function FlowSkeletonLoader() {
         />
         <line
           x1="300"
-          y1="464"
+          y1="514"
           x2="425"
-          y2="390"
-          stroke="#d1d5db"
-          strokeWidth="2"
-          strokeDasharray="4 4"
-          className="animate-pulse"
-        />
-        <line
-          x1="300"
-          y1="656"
-          x2="425"
-          y2="550"
-          stroke="#d1d5db"
-          strokeWidth="2"
-          strokeDasharray="4 4"
-          className="animate-pulse"
-        />
-        <line
-          x1="300"
-          y1="848"
-          x2="425"
-          y2="710"
+          y2="440"
           stroke="#d1d5db"
           strokeWidth="2"
           strokeDasharray="4 4"
@@ -207,9 +216,9 @@ export function FlowSkeletonLoader() {
         {/* Validation to Middleware connections */}
         <line
           x1="675"
-          y1="70"
+          y1="120"
           x2="750"
-          y2="100"
+          y2="150"
           stroke="#d1d5db"
           strokeWidth="2"
           strokeDasharray="4 4"
@@ -217,9 +226,9 @@ export function FlowSkeletonLoader() {
         />
         <line
           x1="675"
-          y1="230"
+          y1="280"
           x2="750"
-          y2="100"
+          y2="150"
           stroke="#d1d5db"
           strokeWidth="2"
           strokeDasharray="4 4"
@@ -227,19 +236,9 @@ export function FlowSkeletonLoader() {
         />
         <line
           x1="675"
-          y1="390"
+          y1="440"
           x2="750"
-          y2="340"
-          stroke="#d1d5db"
-          strokeWidth="2"
-          strokeDasharray="4 4"
-          className="animate-pulse"
-        />
-        <line
-          x1="675"
-          y1="550"
-          x2="750"
-          y2="580"
+          y2="390"
           stroke="#d1d5db"
           strokeWidth="2"
           strokeDasharray="4 4"
@@ -249,9 +248,9 @@ export function FlowSkeletonLoader() {
         {/* Middleware to Processing connections */}
         <line
           x1="1100"
-          y1="100"
+          y1="150"
           x2="1200"
-          y2="70"
+          y2="120"
           stroke="#d1d5db"
           strokeWidth="2"
           strokeDasharray="4 4"
@@ -259,9 +258,9 @@ export function FlowSkeletonLoader() {
         />
         <line
           x1="1100"
-          y1="100"
+          y1="150"
           x2="1200"
-          y2="230"
+          y2="280"
           stroke="#d1d5db"
           strokeWidth="2"
           strokeDasharray="4 4"
@@ -269,29 +268,9 @@ export function FlowSkeletonLoader() {
         />
         <line
           x1="1100"
-          y1="340"
+          y1="390"
           x2="1200"
-          y2="390"
-          stroke="#d1d5db"
-          strokeWidth="2"
-          strokeDasharray="4 4"
-          className="animate-pulse"
-        />
-        <line
-          x1="1100"
-          y1="580"
-          x2="1200"
-          y2="550"
-          stroke="#d1d5db"
-          strokeWidth="2"
-          strokeDasharray="4 4"
-          className="animate-pulse"
-        />
-        <line
-          x1="1100"
-          y1="580"
-          x2="1200"
-          y2="710"
+          y2="440"
           stroke="#d1d5db"
           strokeWidth="2"
           strokeDasharray="4 4"
