@@ -53,7 +53,7 @@ export function FlowSkeletonLoader() {
   ]
 
   return (
-    <div className="relative h-full w-full" style={{ minHeight: "600px", background: "#eeeff3ff" }}>
+    <div className="absolute inset-0 h-full w-full overflow-hidden" style={{ background: "#eeeff3ff" }}>
       {/* Background grid matching the actual flow diagram */}
       <div className="absolute inset-0">
         <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -75,7 +75,7 @@ export function FlowSkeletonLoader() {
       </div>
 
       {/* Section background skeletons */}
-      <div className="relative">
+      <div className="relative h-full w-full">
         {sectionBackgrounds.map((section) => (
           <div
             key={section.id}
@@ -94,7 +94,7 @@ export function FlowSkeletonLoader() {
       </div>
 
       {/* Node skeletons */}
-      <div className="relative">
+      <div className="relative h-full w-full">
         {skeletonNodes.map((node) => (
           <div
             key={node.id}
