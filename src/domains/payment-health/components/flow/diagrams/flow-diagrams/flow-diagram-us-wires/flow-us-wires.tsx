@@ -30,6 +30,7 @@ import type { ActionType, TableModeState, FlowProps } from "@/domains/payment-he
 import SplunkTableUsWiresBackend from "@/domains/payment-health/components/tables/splunk-table-us-wires/splunk-table-us-wires-backend"
 import { TransactionDetailsTableAgGrid } from "@/domains/payment-health/components/tables/transaction-details-table-ag-grid/transaction-details-table-ag-grid"
 import { FlowLegend } from "@/domains/payment-health/components/flow/legend/flow-legend"
+import { FlowSkeletonLoader } from "@/domains/payment-health/components/flow/loading/flow-skeleton-loader"
 
 /**
  * Custom Draggable Panel Component
@@ -595,14 +596,7 @@ export const FlowUsWires = ({
 
   // Early returns for loading and error states
   if (isLoading) {
-    return (
-      <div className="flex h-full w-full items-center justify-center">
-        <div className="space-y-3 text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-500" />
-          <span className="text-sm font-medium text-blue-600">Loading flow diagram...</span>
-        </div>
-      </div>
-    )
+    return <FlowSkeletonLoader />
   }
 
   if (isError) {
