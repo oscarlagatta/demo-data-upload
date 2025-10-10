@@ -1,5 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton"
 import { CardLoadingSkeleton } from "../../loading/loading-skeleton"
+import type { CSSProperties } from "react"
 
 /**
  * FlowSkeletonLoader Component
@@ -32,8 +33,8 @@ interface SectionPositions {
 interface LayoutSection {
   id: string
   position: { x: number; y: number }
-  data: { title: string }
-  style: { width: string; height: string }
+  data: Record<string, any> // Changed from { title: string } to accept any data structure
+  style: CSSProperties // Changed from { width: string; height: string } to CSSProperties
   sectionPositions: SectionPositions
 }
 
@@ -71,9 +72,13 @@ export function FlowSkeletonLoader({
     id: section.id,
     x: section.position.x,
     y: section.position.y,
-    width: Number.parseInt(section.style.width),
-    height: Number.parseInt(section.style.height),
-    label: section.data.title,
+    width:
+      typeof section.style.width === "number" ? section.style.width : Number.parseInt(String(section.style.width || 0)),
+    height:
+      typeof section.style.height === "number"
+        ? section.style.height
+        : Number.parseInt(String(section.style.height || 0)),
+    label: section.data?.title || section.data?.label || "Section",
   }))
 
   // Generate skeleton nodes from layout config
