@@ -68,18 +68,23 @@ export function FlowSkeletonLoader({
   }
 
   // Generate section backgrounds from layout config
-  const sectionBackgrounds = layOutConfig.map((section) => ({
-    id: section.id,
-    x: section.position.x,
-    y: section.position.y,
-    width:
-      typeof section.style.width === "number" ? section.style.width : Number.parseInt(String(section.style.width || 0)),
-    height:
-      typeof section.style.height === "number"
-        ? section.style.height
-        : Number.parseInt(String(section.style.height || 0)),
-    label: section.data?.title || section.data?.label || "Section",
-  }))
+  const sectionBackgrounds = layOutConfig.map((section) => {
+    const data = section.data as { title?: string; label?: string }
+    return {
+      id: section.id,
+      x: section.position.x,
+      y: section.position.y,
+      width:
+        typeof section.style.width === "number"
+          ? section.style.width
+          : Number.parseInt(String(section.style.width || 0)),
+      height:
+        typeof section.style.height === "number"
+          ? section.style.height
+          : Number.parseInt(String(section.style.height || 0)),
+      label: data.title || data.label || "Section",
+    }
+  })
 
   // Generate skeleton nodes from layout config
   const skeletonNodes = layOutConfig.flatMap((section) => {
