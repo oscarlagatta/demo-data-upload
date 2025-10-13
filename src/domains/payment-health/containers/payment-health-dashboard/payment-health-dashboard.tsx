@@ -1,6 +1,7 @@
 import { QueryClient } from "@tanstack/react-query"
 import { FlowDiagramUsWires } from "@/domains/payment-health/components/flow/diagrams/flow-diagrams/flow-diagram-us-wires/flow-diagram-us-wires"
 import { TransactionUsWiresSearchProvider } from "@/domains/payment-health/providers/us-wires/us-wires-transaction-search-provider"
+import { HelpButton } from "@/components/pdf-viewer/help-button"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,6 +18,15 @@ function PaymentHealthDashboard() {
       {/* Header Section */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex-1" />
+            <HelpButton
+              pdfUrl="/documentation/application-guide.pdf"
+              title="Payment Health Application Guide"
+              variant="button"
+            />
+          </div>
+
           <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Payment Health Dashboard</h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
