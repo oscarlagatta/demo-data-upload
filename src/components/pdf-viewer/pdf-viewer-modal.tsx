@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { X, ZoomIn, ZoomOut, Download, Maximize2, Minimize2 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -44,8 +44,8 @@ export function PdfViewerModal({ isOpen, onClose, pdfUrl, title = "Documentation
           isFullscreen ? "max-w-[100vw] h-[100vh] w-[100vw]" : "max-w-[95vw] w-[95vw] h-[95vh]",
         )}
       >
-        <DialogHeader className="shrink-0 px-6 py-4 border-b bg-white shadow-sm flex flex-row items-center justify-between space-y-0">
-          <DialogTitle className="text-xl font-semibold">{title}</DialogTitle>
+        <div className="shrink-0 px-6 py-4 border-b bg-white shadow-sm flex flex-row items-center justify-between">
+          <h2 className="text-xl font-semibold">{title}</h2>
 
           <div className="flex items-center gap-2">
             {/* Zoom controls */}
@@ -100,7 +100,7 @@ export function PdfViewerModal({ isOpen, onClose, pdfUrl, title = "Documentation
               <X className="h-4 w-4" />
             </Button>
           </div>
-        </DialogHeader>
+        </div>
 
         <div className="flex-1 min-h-0 bg-gray-100 p-4 overflow-auto">
           <div className="w-full h-full flex items-start justify-center">
