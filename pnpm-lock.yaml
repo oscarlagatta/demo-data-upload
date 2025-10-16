@@ -23,6 +23,9 @@ importers:
       '@ag-grid-enterprise/column-tool-panel':
         specifier: latest
         version: 32.3.9
+      '@ag-grid-enterprise/core':
+        specifier: latest
+        version: 32.3.9
       '@ag-grid-enterprise/master-detail':
         specifier: latest
         version: 32.3.9
@@ -37,10 +40,10 @@ importers:
         version: 3.3.1
       '@hey-api/client-axios':
         specifier: latest
-        version: 0.9.1(@hey-api/openapi-ts@0.85.1(typescript@5.0.2))(axios@1.12.2)
+        version: 0.9.1(@hey-api/openapi-ts@0.85.2(typescript@5.0.2))(axios@1.12.2)
       '@hey-api/openapi-ts':
         specifier: latest
-        version: 0.85.1(typescript@5.0.2)
+        version: 0.85.2(typescript@5.0.2)
       '@hookform/resolvers':
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.60.0(react@18.0.0))
@@ -127,10 +130,10 @@ importers:
         version: 1.2.8(@types/react-dom@18.0.0)(@types/react@18.0.0)(react-dom@18.0.0(react@18.0.0))(react@18.0.0)
       '@tanstack/react-query':
         specifier: latest
-        version: 5.90.2(react@18.0.0)
+        version: 5.90.3(react@18.0.0)
       '@tanstack/react-query-devtools':
         specifier: latest
-        version: 5.90.2(@tanstack/react-query@5.90.2(react@18.0.0))(react@18.0.0)
+        version: 5.90.2(@tanstack/react-query@5.90.3(react@18.0.0))(react@18.0.0)
       '@vercel/analytics':
         specifier: latest
         version: 1.5.0(next@14.2.16(react-dom@18.0.0(react@18.0.0))(react@18.0.0))(react@18.0.0)
@@ -330,9 +333,9 @@ packages:
     resolution: {integrity: sha512-BMnIuhVgNmSudadw1GcTsP18Yk5l8FrYrg/OSYNxz0D2E0vf4D5e4j5nUbuY8MU6p1vp7ev0xrfP6A/NWazkzQ==}
     engines: {node: '>= 16'}
 
-  '@hey-api/openapi-ts@0.85.1':
-    resolution: {integrity: sha512-1pWQzOO/MXiE6BhyIZ88xJAVt82WJ775wNwRKjvQesNdUsFOJm4SKxzKEu/rn6mlpfiDkdxWlEHJ0SrcM2CUXQ==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=22.10.0}
+  '@hey-api/openapi-ts@0.85.2':
+    resolution: {integrity: sha512-pNu+DOtjeXiGhMqSQ/mYadh6BuKR/QiucVunyA2P7w2uyxkfCJ9sHS20Y72KHXzB3nshKJ9r7JMirysoa50SJg==}
+    engines: {node: '>=18.0.0'}
     hasBin: true
     peerDependencies:
       typescript: '>=5.5.3'
@@ -1437,8 +1440,8 @@ packages:
   '@tailwindcss/postcss@4.1.9':
     resolution: {integrity: sha512-v3DKzHibZO8ioVDmuVHCW1PR0XSM7nS40EjZFJEA1xPuvTuQPaR5flE1LyikU3hu2u1KNWBtEaSe8qsQjX3tyg==}
 
-  '@tanstack/query-core@5.90.2':
-    resolution: {integrity: sha512-k/TcR3YalnzibscALLwxeiLUub6jN5EDLwKDiO7q5f4ICEoptJ+n9+7vcEFy5/x/i6Q+Lb/tXrsKCggf5uQJXQ==}
+  '@tanstack/query-core@5.90.3':
+    resolution: {integrity: sha512-HtPOnCwmx4dd35PfXU8jjkhwYrsHfuqgC8RCJIwWglmhIUIlzPP0ZcEkDAc+UtAWCiLm7T8rxeEfHZlz3hYMCA==}
 
   '@tanstack/query-devtools@5.90.1':
     resolution: {integrity: sha512-GtINOPjPUH0OegJExZ70UahT9ykmAhmtNVcmtdnOZbxLwT7R5OmRztR5Ahe3/Cu7LArEmR6/588tAycuaWb1xQ==}
@@ -1449,8 +1452,8 @@ packages:
       '@tanstack/react-query': ^5.90.2
       react: ^18 || ^19
 
-  '@tanstack/react-query@5.90.2':
-    resolution: {integrity: sha512-CLABiR+h5PYfOWr/z+vWFt5VsOA2ekQeRQBFSKlcoW6Ndx/f8rfyVmq4LbgOM4GG2qtxAxjLYLOpCNTYm4uKzw==}
+  '@tanstack/react-query@5.90.3':
+    resolution: {integrity: sha512-i/LRL6DtuhG6bjGzavIMIVuKKPWx2AnEBIsBfuMm3YoHne0a20nWmsatOCBcVSaT0/8/5YFjNkebHAPLVUSi0Q==}
     peerDependencies:
       react: ^18 || ^19
 
@@ -2609,9 +2612,9 @@ snapshots:
 
   '@floating-ui/utils@0.2.10': {}
 
-  '@hey-api/client-axios@0.9.1(@hey-api/openapi-ts@0.85.1(typescript@5.0.2))(axios@1.12.2)':
+  '@hey-api/client-axios@0.9.1(@hey-api/openapi-ts@0.85.2(typescript@5.0.2))(axios@1.12.2)':
     dependencies:
-      '@hey-api/openapi-ts': 0.85.1(typescript@5.0.2)
+      '@hey-api/openapi-ts': 0.85.2(typescript@5.0.2)
       axios: 1.12.2
 
   '@hey-api/codegen-core@0.2.0(typescript@5.0.2)':
@@ -2625,7 +2628,7 @@ snapshots:
       js-yaml: 4.1.0
       lodash: 4.17.21
 
-  '@hey-api/openapi-ts@0.85.1(typescript@5.0.2)':
+  '@hey-api/openapi-ts@0.85.2(typescript@5.0.2)':
     dependencies:
       '@hey-api/codegen-core': 0.2.0(typescript@5.0.2)
       '@hey-api/json-schema-ref-parser': 1.2.0
@@ -3717,19 +3720,19 @@ snapshots:
       postcss: 8.5.0
       tailwindcss: 4.1.9
 
-  '@tanstack/query-core@5.90.2': {}
+  '@tanstack/query-core@5.90.3': {}
 
   '@tanstack/query-devtools@5.90.1': {}
 
-  '@tanstack/react-query-devtools@5.90.2(@tanstack/react-query@5.90.2(react@18.0.0))(react@18.0.0)':
+  '@tanstack/react-query-devtools@5.90.2(@tanstack/react-query@5.90.3(react@18.0.0))(react@18.0.0)':
     dependencies:
       '@tanstack/query-devtools': 5.90.1
-      '@tanstack/react-query': 5.90.2(react@18.0.0)
+      '@tanstack/react-query': 5.90.3(react@18.0.0)
       react: 18.0.0
 
-  '@tanstack/react-query@5.90.2(react@18.0.0)':
+  '@tanstack/react-query@5.90.3(react@18.0.0)':
     dependencies:
-      '@tanstack/query-core': 5.90.2
+      '@tanstack/query-core': 5.90.3
       react: 18.0.0
 
   '@types/d3-array@3.2.2': {}

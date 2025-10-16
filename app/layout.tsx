@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import "./globals.css"
 import { Suspense } from "react"
+import { AgGridProvider } from "@/components/providers/ag-grid-provider"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,7 +32,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <QueryClientProvider client={queryClient}>
-          <Suspense>{children}</Suspense>
+          <AgGridProvider>
+            <Suspense>{children}</Suspense>
+          </AgGridProvider>
         </QueryClientProvider>
         <Analytics />
       </body>
