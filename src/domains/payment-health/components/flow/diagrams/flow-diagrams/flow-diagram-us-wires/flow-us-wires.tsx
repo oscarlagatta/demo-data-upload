@@ -31,7 +31,41 @@ import SplunkTableUsWiresBackend from "@/domains/payment-health/components/table
 import { TransactionDetailsTableAgGrid } from "@/domains/payment-health/components/tables/transaction-details-table-ag-grid/transaction-details-table-ag-grid"
 import { FlowLegend } from "@/domains/payment-health/components/flow/legend/flow-legend"
 import { FlowSkeletonLoader } from "@/domains/payment-health/components/flow/loading/flow-skeleton-loader"
-import staticLayoutConfig from "@/domains/payment-health/config/flow-layout-config.json"
+import staticLayoutConfigRaw from "@/domains/payment-health/config/flow-layout-config.json"
+const staticLayoutConfig = staticLayoutConfigRaw as StaticLayoutConfig
+
+interface SectionPosition {
+  x: number
+  y: number
+}
+
+interface SectionData {
+  baseX: number
+  positions: SectionPosition[]
+}
+
+interface SectionPositions {
+  sections: Record<string, SectionData>
+}
+
+interface LayoutSection {
+  id: string
+  type: string
+  position: { x: number; y: number }
+  data: Record<string, any>
+  draggable: boolean
+  selectable: boolean
+  zIndex: number
+  style: {
+    width: string | number
+    height: string | number
+  }
+  sectionPositions: SectionPositions
+}
+
+interface StaticLayoutConfig {
+  layOutConfig: LayoutSection[]
+}
 
 /**
  * Custom Draggable Panel Component
@@ -168,7 +202,7 @@ const DraggablePanel = ({
  * @param isLoading - Loading state indicator
  * @param isError - Error state indicator
  * @param onRefetch - Callback to refresh data from external sources
- * @param layOutConfig - Layout configuration from the backend data (NEW)
+ * @param layOutConfig - Layout configuration from the backend data (optional, falls back to static config)
  */
 export const FlowUsWires = ({
   nodeTypes,
@@ -181,9 +215,8 @@ export const FlowUsWires = ({
   isLoading,
   isError,
   onRefetch,
-  layOutConfig: layOutConfigProp, // Accept layOutConfig as a prop from parent
-}: FlowProps & { layOutConfig?: any[] }) => {
-  // Add layOutConfig to props type
+  layOutConfig: layOutConfigFromBackend,
+}: FlowProps & { layOutConfig?: LayoutSection[] }) => {
   // Context hook for transaction search functionality
   const { showTableView } = useTransactionSearchUsWiresContext()
 
@@ -598,17 +631,23 @@ export const FlowUsWires = ({
     return null
   }
 
-  console.log("[v0] Rendering - isLoading:", isLoading, "layOutConfig length:", layOutConfigProp?.length || 0)
+  console.log("[v0] Rendering - isLoading:", isLoading, "layOutConfig length:", layOutConfigFromBackend?.length || 0)
 
   // Early returns for loading and error states
   if (isLoading) {
-    const layoutToUse =
-      layOutConfigProp && layOutConfigProp.length > 0 ? layOutConfigProp : staticLayoutConfig.layOutConfig
+    const layoutConfigForSkeleton: LayoutSection[] =
+      layOutConfigFromBackend && layOutConfigFromBackend.length > 0
+        ? layOutConfigFromBackend
+        : staticLayoutConfig.layOutConfig
 
-    console.log("[v0] Showing skeleton loader with layout config:", layoutToUse.length, "sections")
-    console.log("[v0] Using", layOutConfigProp && layOutConfigProp.length > 0 ? "backend" : "static", "layout config")
+    console.log("[v0] Showing skeleton loader with layout config:", layoutConfigForSkeleton.length, "sections")
+    console.log(
+      "[v0] Using",
+      layOutConfigFromBackend && layOutConfigFromBackend.length > 0 ? "backend" : "static",
+      "layout config",
+    )
 
-    return <FlowSkeletonLoader layOutConfig={layoutToUse} />
+    return <FlowSkeletonLoader layOutConfig={layoutConfigForSkeleton} />
   }
 
   if (isError) {

@@ -69,6 +69,21 @@ export function FlowSkeletonLoader({
     )
   }
 
+  console.log("[v0] FlowSkeletonLoader - Received layOutConfig:", layOutConfig.length, "sections")
+  if (layOutConfig.length > 0) {
+    console.log("[v0] FlowSkeletonLoader - First section structure:", {
+      id: layOutConfig[0].id,
+      hasSectionPositions: !!layOutConfig[0].sectionPositions,
+      hasSectionsProperty: !!layOutConfig[0].sectionPositions?.sections,
+      sectionsKeys: layOutConfig[0].sectionPositions?.sections
+        ? Object.keys(layOutConfig[0].sectionPositions.sections)
+        : [],
+      sampleSectionData: layOutConfig[0].sectionPositions?.sections
+        ? layOutConfig[0].sectionPositions.sections[Object.keys(layOutConfig[0].sectionPositions.sections)[0]]
+        : null,
+    })
+  }
+
   const parseDimension = (value: string | number | undefined, defaultValue: number): number => {
     if (typeof value === "number") return value
     if (typeof value === "string") return Number.parseInt(value.replace("px", ""), 10) || defaultValue
@@ -92,40 +107,58 @@ export function FlowSkeletonLoader({
   })
 
   const skeletonNodes = layOutConfig.flatMap((section) => {
+    if (!section.sectionPositions || !section.sectionPositions.sections) {
+      console.warn("[v0] FlowSkeletonLoader - Section missing sectionPositions.sections:", section.id)
+      return []
+    }
+
+    // Get the first section key (should match the section.id)
     const sectionKey = Object.keys(section.sectionPositions.sections)[0]
-    if (!sectionKey) return []
+    if (!sectionKey) {
+      console.warn("[v0] FlowSkeletonLoader - No section key found for:", section.id)
+      return []
+    }
 
-    const sectionData = section.sectionPositions.sections[sectionKey]
-    if (!sectionData || !sectionData.positions) return []
+    const sectionData: SectionData = section.sectionPositions.sections[sectionKey]
+    if (!sectionData || !sectionData.positions || !Array.isArray(sectionData.positions)) {
+      console.warn("[v0] FlowSkeletonLoader - Invalid section data for:", section.id, sectionKey)
+      return []
+    }
 
-    return sectionData.positions.map((pos, nodeIndex) => {
-      let nodeWidth = NODE_WIDTH
-      let nodeHeight = NODE_HEIGHT
+    console.log(
+      "[v0] FlowSkeletonLoader - Processing section:",
+      section.id,
+      "with",
+      sectionData.positions.length,
+      "nodes",
+    )
 
-      // Adjust node dimensions based on section type to match actual flow diagram
-      if (section.id === "bg-middleware") {
-        nodeWidth = 350
-        nodeHeight = 180
-      } else if (section.id === "bg-processing") {
-        nodeWidth = 280
-        nodeHeight = 140
-      } else if (section.id === "bg-origination") {
-        nodeWidth = 250
-        nodeHeight = 160
-      } else if (section.id === "bg-validation") {
-        nodeWidth = 250
-        nodeHeight = 150
-      }
+    let nodeWidth = NODE_WIDTH
+    let nodeHeight = NODE_HEIGHT
 
-      return {
-        id: `node-${section.id}-${nodeIndex}`,
-        x: pos.x,
-        y: pos.y + firstNodeTopOffset,
-        width: nodeWidth,
-        height: nodeHeight,
-        sectionId: section.id,
-      }
-    })
+    // Adjust node dimensions based on section type to match actual flow diagram
+    if (section.id === "bg-middleware") {
+      nodeWidth = 350
+      nodeHeight = 180
+    } else if (section.id === "bg-processing") {
+      nodeWidth = 280
+      nodeHeight = 140
+    } else if (section.id === "bg-origination") {
+      nodeWidth = 250
+      nodeHeight = 160
+    } else if (section.id === "bg-validation") {
+      nodeWidth = 250
+      nodeHeight = 150
+    }
+
+    return sectionData.positions.map((pos, nodeIndex) => ({
+      id: `node-${section.id}-${nodeIndex}`,
+      x: pos.x,
+      y: pos.y + firstNodeTopOffset,
+      width: nodeWidth,
+      height: nodeHeight,
+      sectionId: section.id,
+    }))
   })
 
   console.log("[v0] FlowSkeletonLoader - Generated sections:", sectionBackgrounds.length)
