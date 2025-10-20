@@ -10,9 +10,9 @@ import type { CSSProperties } from "react"
  *
  * Features:
  * - Dynamic mapping from layOutConfig sectionPositions
- * - Percentage-based positioning for responsive layouts
- * - Top offset adjustment for proper vertical alignment
+ * - Configurable first node top offset for precise positioning
  * - Exact section backgrounds and node placements
+ * - Connection line visualization between sections
  * - Seamless integration with actual flow diagram structure
  */
 
@@ -33,8 +33,8 @@ interface SectionPositions {
 interface LayoutSection {
   id: string
   position: { x: number; y: number }
-  data: Record<string, any> // Changed from { title: string } to accept any data structure
-  style: CSSProperties // Changed from { width: string; height: string } to CSSProperties
+  data: Record<string, any>
+  style: CSSProperties
   sectionPositions: SectionPositions
 }
 
@@ -42,11 +42,12 @@ interface FlowSkeletonLoaderProps {
   layOutConfig?: LayoutSection[]
   canvasWidth?: number
   canvasHeight?: number
+  firstNodeTopOffset?: number
 }
 
 const DEFAULT_CANVAS_WIDTH = 1650
 const DEFAULT_CANVAS_HEIGHT = 960
-const TOP_OFFSET = 50 // Vertical offset for node alignment
+const DEFAULT_TOP_OFFSET = 50 // Default vertical offset for node alignment
 const NODE_WIDTH = 250 // Default node width
 const NODE_HEIGHT = 140 // Default node height
 
@@ -54,6 +55,7 @@ export function FlowSkeletonLoader({
   layOutConfig = [],
   canvasWidth = DEFAULT_CANVAS_WIDTH,
   canvasHeight = DEFAULT_CANVAS_HEIGHT,
+  firstNodeTopOffset = DEFAULT_TOP_OFFSET,
 }: FlowSkeletonLoaderProps) {
   // If no layout config provided, show a simple loading state
   if (!layOutConfig || layOutConfig.length === 0) {
@@ -67,50 +69,58 @@ export function FlowSkeletonLoader({
     )
   }
 
+  const parseDimension = (value: string | number | undefined, defaultValue: number): number => {
+    if (typeof value === "number") return value
+    if (typeof value === "string") return Number.parseInt(value.replace("px", ""), 10) || defaultValue
+    return defaultValue
+  }
+
   // Generate section backgrounds from layout config
   const sectionBackgrounds = layOutConfig.map((section) => {
     const data = section.data as { title?: string; label?: string }
+    const width = parseDimension(section.style.width, 350)
+    const height = parseDimension(section.style.height, 960)
+
     return {
       id: section.id,
       x: section.position.x,
       y: section.position.y,
-      width:
-        typeof section.style.width === "number"
-          ? section.style.width
-          : Number.parseInt(String(section.style.width || 0)),
-      height:
-        typeof section.style.height === "number"
-          ? section.style.height
-          : Number.parseInt(String(section.style.height || 0)),
+      width,
+      height,
       label: data.title || data.label || "Section",
     }
   })
 
-  // Generate skeleton nodes from layout config
   const skeletonNodes = layOutConfig.flatMap((section) => {
     const sectionKey = Object.keys(section.sectionPositions.sections)[0]
+    if (!sectionKey) return []
+
     const sectionData = section.sectionPositions.sections[sectionKey]
+    if (!sectionData || !sectionData.positions) return []
 
     return sectionData.positions.map((pos, nodeIndex) => {
-      // Determine node dimensions based on section
       let nodeWidth = NODE_WIDTH
       let nodeHeight = NODE_HEIGHT
 
-      // Adjust node dimensions for different sections
+      // Adjust node dimensions based on section type to match actual flow diagram
       if (section.id === "bg-middleware") {
         nodeWidth = 350
         nodeHeight = 180
       } else if (section.id === "bg-processing") {
-        nodeWidth = 400
+        nodeWidth = 280
         nodeHeight = 140
       } else if (section.id === "bg-origination") {
+        nodeWidth = 250
         nodeHeight = 160
+      } else if (section.id === "bg-validation") {
+        nodeWidth = 250
+        nodeHeight = 150
       }
 
       return {
         id: `node-${section.id}-${nodeIndex}`,
         x: pos.x,
-        y: pos.y + TOP_OFFSET,
+        y: pos.y + firstNodeTopOffset,
         width: nodeWidth,
         height: nodeHeight,
         sectionId: section.id,
@@ -120,6 +130,8 @@ export function FlowSkeletonLoader({
 
   console.log("[v0] FlowSkeletonLoader - Generated sections:", sectionBackgrounds.length)
   console.log("[v0] FlowSkeletonLoader - Generated nodes:", skeletonNodes.length)
+  console.log("[v0] FlowSkeletonLoader - Canvas dimensions:", { canvasWidth, canvasHeight })
+  console.log("[v0] FlowSkeletonLoader - First node top offset:", firstNodeTopOffset)
 
   return (
     <div
@@ -155,7 +167,7 @@ export function FlowSkeletonLoader({
         {sectionBackgrounds.map((section) => (
           <div
             key={section.id}
-            className="absolute rounded-lg border-2 border-gray-200 bg-white/60 p-4"
+            className="absolute rounded-lg border-2 border-gray-200 bg-white/60 p-4 shadow-sm"
             style={{
               left: `${section.x}px`,
               top: `${section.y}px`,
@@ -164,8 +176,8 @@ export function FlowSkeletonLoader({
             }}
           >
             <div className="mb-2 flex items-center justify-between border-b border-gray-200 pb-2">
-              <Skeleton className="h-5 w-48" />
-              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-5 w-48 animate-pulse" />
+              <Skeleton className="h-4 w-16 animate-pulse" />
             </div>
           </div>
         ))}
@@ -191,101 +203,51 @@ export function FlowSkeletonLoader({
 
       {/* Connection line skeletons between sections */}
       <svg className="pointer-events-none absolute inset-0" style={{ zIndex: 1 }}>
-        {/* Origination to Validation connections */}
-        <line
-          x1="300"
-          y1="130"
-          x2="425"
-          y2="120"
-          stroke="#d1d5db"
-          strokeWidth="2"
-          strokeDasharray="4 4"
-          className="animate-pulse"
-        />
-        <line
-          x1="300"
-          y1="322"
-          x2="425"
-          y2="280"
-          stroke="#d1d5db"
-          strokeWidth="2"
-          strokeDasharray="4 4"
-          className="animate-pulse"
-        />
-        <line
-          x1="300"
-          y1="514"
-          x2="425"
-          y2="440"
-          stroke="#d1d5db"
-          strokeWidth="2"
-          strokeDasharray="4 4"
-          className="animate-pulse"
-        />
-
-        {/* Validation to Middleware connections */}
-        <line
-          x1="675"
-          y1="120"
-          x2="750"
-          y2="150"
-          stroke="#d1d5db"
-          strokeWidth="2"
-          strokeDasharray="4 4"
-          className="animate-pulse"
-        />
-        <line
-          x1="675"
-          y1="280"
-          x2="750"
-          y2="150"
-          stroke="#d1d5db"
-          strokeWidth="2"
-          strokeDasharray="4 4"
-          className="animate-pulse"
-        />
-        <line
-          x1="675"
-          y1="440"
-          x2="750"
-          y2="390"
-          stroke="#d1d5db"
-          strokeWidth="2"
-          strokeDasharray="4 4"
-          className="animate-pulse"
-        />
-
-        {/* Middleware to Processing connections */}
-        <line
-          x1="1100"
-          y1="150"
-          x2="1200"
-          y2="120"
-          stroke="#d1d5db"
-          strokeWidth="2"
-          strokeDasharray="4 4"
-          className="animate-pulse"
-        />
-        <line
-          x1="1100"
-          y1="150"
-          x2="1200"
-          y2="280"
-          stroke="#d1d5db"
-          strokeWidth="2"
-          strokeDasharray="4 4"
-          className="animate-pulse"
-        />
-        <line
-          x1="1100"
-          y1="390"
-          x2="1200"
-          y2="440"
-          stroke="#d1d5db"
-          strokeWidth="2"
-          strokeDasharray="4 4"
-          className="animate-pulse"
-        />
+        {sectionBackgrounds.length >= 2 && (
+          <>
+            {/* Origination to Validation */}
+            <line
+              x1={sectionBackgrounds[0].x + sectionBackgrounds[0].width}
+              y1={sectionBackgrounds[0].y + sectionBackgrounds[0].height / 2}
+              x2={sectionBackgrounds[1].x}
+              y2={sectionBackgrounds[1].y + sectionBackgrounds[1].height / 2}
+              stroke="#d1d5db"
+              strokeWidth="2"
+              strokeDasharray="4 4"
+              className="animate-pulse"
+            />
+          </>
+        )}
+        {sectionBackgrounds.length >= 3 && (
+          <>
+            {/* Validation to Middleware */}
+            <line
+              x1={sectionBackgrounds[1].x + sectionBackgrounds[1].width}
+              y1={sectionBackgrounds[1].y + sectionBackgrounds[1].height / 2}
+              x2={sectionBackgrounds[2].x}
+              y2={sectionBackgrounds[2].y + sectionBackgrounds[2].height / 2}
+              stroke="#d1d5db"
+              strokeWidth="2"
+              strokeDasharray="4 4"
+              className="animate-pulse"
+            />
+          </>
+        )}
+        {sectionBackgrounds.length >= 4 && (
+          <>
+            {/* Middleware to Processing */}
+            <line
+              x1={sectionBackgrounds[2].x + sectionBackgrounds[2].width}
+              y1={sectionBackgrounds[2].y + sectionBackgrounds[2].height / 2}
+              x2={sectionBackgrounds[3].x}
+              y2={sectionBackgrounds[3].y + sectionBackgrounds[3].height / 2}
+              stroke="#d1d5db"
+              strokeWidth="2"
+              strokeDasharray="4 4"
+              className="animate-pulse"
+            />
+          </>
+        )}
       </svg>
     </div>
   )

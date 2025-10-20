@@ -598,20 +598,25 @@ export const FlowUsWires = ({
     if (!flowNodes || flowNodes.length === 0) return []
 
     // Find all background nodes which contain section layout information
+    // Background nodes define the sections (Origination, Validation, Middleware, Processing)
+    // and include sectionPositions data that specifies exact node coordinates
     const backgroundNodes = flowNodes.filter((node) => node.type === "background")
 
-    // Map background nodes to layout config format
+    // Map background nodes to layout config format expected by FlowSkeletonLoader
+    // This structure includes section position, dimensions, and node positions
     return backgroundNodes.map((node) => ({
-      id: node.id,
-      position: node.position,
-      data: node.data,
-      style: node.style || { width: "350px", height: "960px" },
-      sectionPositions: (node.data as any).sectionPositions || { sections: {} },
+      id: node.id, // Section identifier (e.g., "bg-origination")
+      position: node.position, // Section's x,y coordinates on canvas
+      data: node.data, // Section metadata (title, label, etc.)
+      style: node.style || { width: "350px", height: "960px" }, // Section dimensions
+      sectionPositions: (node.data as any).sectionPositions || { sections: {} }, // Node positions within section
     }))
   }, [flowNodes])
 
   // Early returns for loading and error states
   if (isLoading) {
+    // The skeleton will interpret the layout data to render section backgrounds,
+    // node placeholders, and connection lines that match the final diagram
     return <FlowSkeletonLoader layOutConfig={layOutConfig} />
   }
 
