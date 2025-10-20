@@ -66,6 +66,7 @@ export function useFlowDataBackEnd() {
     sectionTimings,
     totalProcessingTime,
     splunkData: flowData?.nodes || [],
+    layOutConfig: flowData?.layOutConfig || [],
     refetch, // Now exposing refetch function for manual data refresh
   }
 }

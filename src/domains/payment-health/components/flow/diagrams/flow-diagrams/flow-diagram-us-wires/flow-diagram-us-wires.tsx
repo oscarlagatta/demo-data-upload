@@ -55,7 +55,7 @@ export function FlowDiagramUsWires({ isMonitoringMode = false }: FlowDiagramProp
   const { showAmountSearchResults, amountSearchParams } = useTransactionSearchUsWiresContext()
   const [showSearchBox, setShowSearchBox] = useState(true)
 
-  const { nodes, edges, sectionTimings, totalProcessingTime, splunkData, isLoading, error, refetch } =
+  const { nodes, edges, sectionTimings, totalProcessingTime, splunkData, isLoading, error, refetch, layOutConfig } =
     useFlowDataBackEnd()
 
   const [isShowHiden, setIsShowHiden] = useState(isMonitoringMode)
@@ -105,6 +105,7 @@ export function FlowDiagramUsWires({ isMonitoringMode = false }: FlowDiagramProp
             isLoading={isLoading}
             isError={!!error}
             onRefetch={handleRefetch}
+            layOutConfig={layOutConfig}
           />
         )}
       </ReactFlowProvider>

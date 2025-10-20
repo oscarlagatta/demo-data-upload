@@ -167,6 +167,7 @@ const DraggablePanel = ({
  * @param isLoading - Loading state indicator
  * @param isError - Error state indicator
  * @param onRefetch - Callback to refresh data from external sources
+ * @param layOutConfig - Layout configuration from the backend data (NEW)
  */
 export const FlowUsWires = ({
   nodeTypes,
@@ -179,7 +180,9 @@ export const FlowUsWires = ({
   isLoading,
   isError,
   onRefetch,
-}: FlowProps) => {
+  layOutConfig: layOutConfigProp, // Accept layOutConfig as a prop from parent
+}: FlowProps & { layOutConfig?: any[] }) => {
+  // Add layOutConfig to props type
   // Context hook for transaction search functionality
   const { showTableView } = useTransactionSearchUsWiresContext()
 
@@ -594,53 +597,26 @@ export const FlowUsWires = ({
     return null
   }
 
-  const layOutConfig = useMemo(() => {
-    console.log("[v0] layOutConfig calculation - flowNodes:", flowNodes?.length || 0)
-
-    if (!flowNodes || flowNodes.length === 0) {
-      console.log("[v0] layOutConfig is empty - no flowNodes available")
-      return []
-    }
-
-    // Find all background nodes which contain section layout information
-    // Background nodes define the sections (Origination, Validation, Middleware, Processing)
-    // and include sectionPositions data that specifies exact node coordinates
-    const backgroundNodes = flowNodes.filter((node) => node.type === "background")
-
-    console.log("[v0] Found background nodes:", backgroundNodes.length)
-    console.log(
-      "[v0] Background nodes details:",
-      backgroundNodes.map((n) => ({
-        id: n.id,
-        type: n.type,
-        hasData: !!n.data,
-        hasSectionPositions: !!(n.data as any)?.sectionPositions,
-      })),
-    )
-
-    // Map background nodes to layout config format expected by FlowSkeletonLoader
-    // This structure includes section position, dimensions, and node positions
-    const config = backgroundNodes.map((node) => ({
-      id: node.id, // Section identifier (e.g., "bg-origination")
-      position: node.position, // Section's x,y coordinates on canvas
-      data: node.data, // Section metadata (title, label, etc.)
-      style: node.style || { width: "350px", height: "960px" }, // Section dimensions
-      sectionPositions: (node.data as any).sectionPositions || { sections: {} }, // Node positions within section
-    }))
-
-    console.log("[v0] Generated layOutConfig:", config.length, "sections")
-    console.log("[v0] layOutConfig structure:", JSON.stringify(config, null, 2))
-
-    return config
-  }, [flowNodes])
-
-  console.log("[v0] Rendering - isLoading:", isLoading, "layOutConfig length:", layOutConfig.length)
+  console.log("[v0] Rendering - isLoading:", isLoading, "layOutConfig length:", layOutConfigProp?.length || 0)
 
   // Early returns for loading and error states
   if (isLoading) {
-    // The skeleton will interpret the layout data to render section backgrounds,
-    // node placeholders, and connection lines that match the final diagram
-    return <FlowSkeletonLoader layOutConfig={layOutConfig} />
+    // Check if we have layout config data from the response
+    if (!layOutConfigProp || layOutConfigProp.length === 0) {
+      // Show simple loading state until we have layout config
+      return (
+        <div className="flex h-full w-full items-center justify-center">
+          <div className="space-y-3 text-center">
+            <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-500" />
+            <span className="text-sm font-medium text-blue-600">Loading flow diagram...</span>
+          </div>
+        </div>
+      )
+    }
+
+    // Once we have layout config, show the detailed skeleton loader
+    console.log("[v0] Using layout config from response for skeleton:", layOutConfigProp.length, "sections")
+    return <FlowSkeletonLoader layOutConfig={layOutConfigProp} />
   }
 
   if (isError) {
