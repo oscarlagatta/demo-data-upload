@@ -595,23 +595,46 @@ export const FlowUsWires = ({
   }
 
   const layOutConfig = useMemo(() => {
-    if (!flowNodes || flowNodes.length === 0) return []
+    console.log("[v0] layOutConfig calculation - flowNodes:", flowNodes?.length || 0)
+
+    if (!flowNodes || flowNodes.length === 0) {
+      console.log("[v0] layOutConfig is empty - no flowNodes available")
+      return []
+    }
 
     // Find all background nodes which contain section layout information
     // Background nodes define the sections (Origination, Validation, Middleware, Processing)
     // and include sectionPositions data that specifies exact node coordinates
     const backgroundNodes = flowNodes.filter((node) => node.type === "background")
 
+    console.log("[v0] Found background nodes:", backgroundNodes.length)
+    console.log(
+      "[v0] Background nodes details:",
+      backgroundNodes.map((n) => ({
+        id: n.id,
+        type: n.type,
+        hasData: !!n.data,
+        hasSectionPositions: !!(n.data as any)?.sectionPositions,
+      })),
+    )
+
     // Map background nodes to layout config format expected by FlowSkeletonLoader
     // This structure includes section position, dimensions, and node positions
-    return backgroundNodes.map((node) => ({
+    const config = backgroundNodes.map((node) => ({
       id: node.id, // Section identifier (e.g., "bg-origination")
       position: node.position, // Section's x,y coordinates on canvas
       data: node.data, // Section metadata (title, label, etc.)
       style: node.style || { width: "350px", height: "960px" }, // Section dimensions
       sectionPositions: (node.data as any).sectionPositions || { sections: {} }, // Node positions within section
     }))
+
+    console.log("[v0] Generated layOutConfig:", config.length, "sections")
+    console.log("[v0] layOutConfig structure:", JSON.stringify(config, null, 2))
+
+    return config
   }, [flowNodes])
+
+  console.log("[v0] Rendering - isLoading:", isLoading, "layOutConfig length:", layOutConfig.length)
 
   // Early returns for loading and error states
   if (isLoading) {
