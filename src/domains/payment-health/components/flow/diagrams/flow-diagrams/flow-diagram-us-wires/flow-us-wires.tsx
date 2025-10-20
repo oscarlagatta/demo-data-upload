@@ -31,6 +31,7 @@ import SplunkTableUsWiresBackend from "@/domains/payment-health/components/table
 import { TransactionDetailsTableAgGrid } from "@/domains/payment-health/components/tables/transaction-details-table-ag-grid/transaction-details-table-ag-grid"
 import { FlowLegend } from "@/domains/payment-health/components/flow/legend/flow-legend"
 import { FlowSkeletonLoader } from "@/domains/payment-health/components/flow/loading/flow-skeleton-loader"
+import staticLayoutConfig from "@/domains/payment-health/config/flow-layout-config.json"
 
 /**
  * Custom Draggable Panel Component
@@ -601,22 +602,13 @@ export const FlowUsWires = ({
 
   // Early returns for loading and error states
   if (isLoading) {
-    // Check if we have layout config data from the response
-    if (!layOutConfigProp || layOutConfigProp.length === 0) {
-      // Show simple loading state until we have layout config
-      return (
-        <div className="flex h-full w-full items-center justify-center">
-          <div className="space-y-3 text-center">
-            <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-500" />
-            <span className="text-sm font-medium text-blue-600">Loading flow diagram...</span>
-          </div>
-        </div>
-      )
-    }
+    const layoutToUse =
+      layOutConfigProp && layOutConfigProp.length > 0 ? layOutConfigProp : staticLayoutConfig.layOutConfig
 
-    // Once we have layout config, show the detailed skeleton loader
-    console.log("[v0] Using layout config from response for skeleton:", layOutConfigProp.length, "sections")
-    return <FlowSkeletonLoader layOutConfig={layOutConfigProp} />
+    console.log("[v0] Showing skeleton loader with layout config:", layoutToUse.length, "sections")
+    console.log("[v0] Using", layOutConfigProp && layOutConfigProp.length > 0 ? "backend" : "static", "layout config")
+
+    return <FlowSkeletonLoader layOutConfig={layoutToUse} />
   }
 
   if (isError) {

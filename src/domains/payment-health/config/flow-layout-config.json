@@ -1,0 +1,96 @@
+{
+  "layOutConfig": [
+    {
+      "id": "bg-origination",
+      "type": "background",
+      "position": { "x": 0, "y": 0 },
+      "data": { "title": "Origination" },
+      "draggable": false,
+      "selectable": false,
+      "zIndex": -1,
+      "style": { "width": "350px", "height": "960px" },
+      "sectionPositions": {
+        "sections": {
+          "bg-origination": {
+            "baseX": 50,
+            "positions": [
+              { "x": 50, "y": 0 },
+              { "x": 50, "y": 192 },
+              { "x": 50, "y": 384 },
+              { "x": 50, "y": 576 },
+              { "x": 50, "y": 768 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "bg-validation",
+      "type": "background",
+      "position": { "x": 350, "y": 0 },
+      "data": { "title": "Payment Validation and Routing" },
+      "draggable": false,
+      "selectable": false,
+      "zIndex": -1,
+      "style": { "width": "350px", "height": "960px" },
+      "sectionPositions": {
+        "sections": {
+          "bg-validation": {
+            "baseX": 425,
+            "positions": [
+              { "x": 425, "y": 0 },
+              { "x": 425, "y": 160 },
+              { "x": 425, "y": 320 },
+              { "x": 425, "y": 480 },
+              { "x": 425, "y": 640 },
+              { "x": 425, "y": 800 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "bg-middleware",
+      "type": "background",
+      "position": { "x": 700, "y": 0 },
+      "data": { "title": "Middleware" },
+      "draggable": false,
+      "selectable": false,
+      "zIndex": -1,
+      "style": { "width": "450px", "height": "960px" },
+      "sectionPositions": {
+        "sections": {
+          "bg-middleware": {
+            "baseX": 750,
+            "positions": [{ "x": 750, "y": 0 }, { "x": 750, "y": 240 }, { "x": 750, "y": 480 }]
+          }
+        }
+      }
+    },
+    {
+      "id": "bg-processing",
+      "type": "background",
+      "position": { "x": 1150, "y": 0 },
+      "data": { "title": "Payment Processing, Sanctions & Investigation" },
+      "draggable": false,
+      "selectable": false,
+      "zIndex": -1,
+      "style": { "width": "500px", "height": "960px" },
+      "sectionPositions": {
+        "sections": {
+          "bg-processing": {
+            "baseX": 1200,
+            "positions": [
+              { "x": 1200, "y": 0 },
+              { "x": 1200, "y": 160 },
+              { "x": 1200, "y": 320 },
+              { "x": 1200, "y": 480 },
+              { "x": 1200, "y": 640 },
+              { "x": 1200, "y": 800 }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
