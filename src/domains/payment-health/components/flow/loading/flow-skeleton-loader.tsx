@@ -9,11 +9,14 @@ import type { CSSProperties } from "react"
  * by utilizing the layOutConfig structure passed from the parent component.
  *
  * Features:
+ * - Dynamic section sizing based on style.width and style.height from JSON configuration
+ * - Configurable gap between sections (default 10px)
  * - Dynamic mapping from layOutConfig sectionPositions
  * - Configurable first node top offset for precise positioning
  * - Exact section backgrounds and node placements
  * - Connection line visualization between sections
  * - Seamless integration with actual flow diagram structure
+ * - Standardized node dimensions (175px x 96px) for consistent layout
  */
 
 interface SectionPosition {
@@ -34,7 +37,7 @@ interface LayoutSection {
   id: string
   position: { x: number; y: number }
   data: Record<string, any>
-  style: CSSProperties
+  style: CSSProperties // Contains width and height for dynamic section sizing
   sectionPositions: SectionPositions
 }
 
@@ -43,19 +46,22 @@ interface FlowSkeletonLoaderProps {
   canvasWidth?: number
   canvasHeight?: number
   firstNodeTopOffset?: number
+  sectionGap?: number // Gap between sections in pixels
 }
 
 const DEFAULT_CANVAS_WIDTH = 1650
 const DEFAULT_CANVAS_HEIGHT = 960
 const DEFAULT_TOP_OFFSET = 50 // Default vertical offset for node alignment
-const NODE_WIDTH = 250 // Default node width
-const NODE_HEIGHT = 140 // Default node height
+const DEFAULT_SECTION_GAP = 10 // Default gap between sections
+const STANDARD_NODE_WIDTH = 175 // Fixed node width for all nodes
+const STANDARD_NODE_HEIGHT = 96 // Fixed node height for all nodes
 
 export function FlowSkeletonLoader({
   layOutConfig = [],
   canvasWidth = DEFAULT_CANVAS_WIDTH,
   canvasHeight = DEFAULT_CANVAS_HEIGHT,
   firstNodeTopOffset = DEFAULT_TOP_OFFSET,
+  sectionGap = DEFAULT_SECTION_GAP,
 }: FlowSkeletonLoaderProps) {
   // If no layout config provided, show a simple loading state
   if (!layOutConfig || layOutConfig.length === 0) {
@@ -96,6 +102,8 @@ export function FlowSkeletonLoader({
     const width = parseDimension(section.style.width, 350)
     const height = parseDimension(section.style.height, 960)
 
+    console.log("[v0] FlowSkeletonLoader - Section:", section.id, "dimensions:", { width, height })
+
     return {
       id: section.id,
       x: section.position.x,
@@ -133,30 +141,12 @@ export function FlowSkeletonLoader({
       "nodes",
     )
 
-    let nodeWidth = NODE_WIDTH
-    let nodeHeight = NODE_HEIGHT
-
-    // Adjust node dimensions based on section type to match actual flow diagram
-    if (section.id === "bg-middleware") {
-      nodeWidth = 350
-      nodeHeight = 180
-    } else if (section.id === "bg-processing") {
-      nodeWidth = 280
-      nodeHeight = 140
-    } else if (section.id === "bg-origination") {
-      nodeWidth = 250
-      nodeHeight = 160
-    } else if (section.id === "bg-validation") {
-      nodeWidth = 250
-      nodeHeight = 150
-    }
-
     return sectionData.positions.map((pos, nodeIndex) => ({
       id: `node-${section.id}-${nodeIndex}`,
       x: pos.x,
       y: pos.y + firstNodeTopOffset,
-      width: nodeWidth,
-      height: nodeHeight,
+      width: STANDARD_NODE_WIDTH,
+      height: STANDARD_NODE_HEIGHT,
       sectionId: section.id,
     }))
   })
@@ -165,6 +155,11 @@ export function FlowSkeletonLoader({
   console.log("[v0] FlowSkeletonLoader - Generated nodes:", skeletonNodes.length)
   console.log("[v0] FlowSkeletonLoader - Canvas dimensions:", { canvasWidth, canvasHeight })
   console.log("[v0] FlowSkeletonLoader - First node top offset:", firstNodeTopOffset)
+  console.log("[v0] FlowSkeletonLoader - Section gap:", sectionGap, "px")
+  console.log("[v0] FlowSkeletonLoader - Standardized node dimensions:", {
+    width: STANDARD_NODE_WIDTH,
+    height: STANDARD_NODE_HEIGHT,
+  })
 
   return (
     <div
@@ -236,51 +231,23 @@ export function FlowSkeletonLoader({
 
       {/* Connection line skeletons between sections */}
       <svg className="pointer-events-none absolute inset-0" style={{ zIndex: 1 }}>
-        {sectionBackgrounds.length >= 2 && (
-          <>
-            {/* Origination to Validation */}
-            <line
-              x1={sectionBackgrounds[0].x + sectionBackgrounds[0].width}
-              y1={sectionBackgrounds[0].y + sectionBackgrounds[0].height / 2}
-              x2={sectionBackgrounds[1].x}
-              y2={sectionBackgrounds[1].y + sectionBackgrounds[1].height / 2}
-              stroke="#d1d5db"
-              strokeWidth="2"
-              strokeDasharray="4 4"
-              className="animate-pulse"
-            />
-          </>
-        )}
-        {sectionBackgrounds.length >= 3 && (
-          <>
-            {/* Validation to Middleware */}
-            <line
-              x1={sectionBackgrounds[1].x + sectionBackgrounds[1].width}
-              y1={sectionBackgrounds[1].y + sectionBackgrounds[1].height / 2}
-              x2={sectionBackgrounds[2].x}
-              y2={sectionBackgrounds[2].y + sectionBackgrounds[2].height / 2}
-              stroke="#d1d5db"
-              strokeWidth="2"
-              strokeDasharray="4 4"
-              className="animate-pulse"
-            />
-          </>
-        )}
-        {sectionBackgrounds.length >= 4 && (
-          <>
-            {/* Middleware to Processing */}
-            <line
-              x1={sectionBackgrounds[2].x + sectionBackgrounds[2].width}
-              y1={sectionBackgrounds[2].y + sectionBackgrounds[2].height / 2}
-              x2={sectionBackgrounds[3].x}
-              y2={sectionBackgrounds[3].y + sectionBackgrounds[3].height / 2}
-              stroke="#d1d5db"
-              strokeWidth="2"
-              strokeDasharray="4 4"
-              className="animate-pulse"
-            />
-          </>
-        )}
+        {sectionBackgrounds.length >= 2 &&
+          sectionBackgrounds.slice(0, -1).map((section, index) => {
+            const nextSection = sectionBackgrounds[index + 1]
+            return (
+              <line
+                key={`connection-${section.id}-${nextSection.id}`}
+                x1={section.x + section.width + sectionGap / 2}
+                y1={section.y + section.height / 2}
+                x2={nextSection.x - sectionGap / 2}
+                y2={nextSection.y + nextSection.height / 2}
+                stroke="#d1d5db"
+                strokeWidth="2"
+                strokeDasharray="4 4"
+                className="animate-pulse"
+              />
+            )
+          })}
       </svg>
     </div>
   )
