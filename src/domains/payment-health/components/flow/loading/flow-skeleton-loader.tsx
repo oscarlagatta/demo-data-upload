@@ -175,12 +175,15 @@ export function FlowSkeletonLoader({
     height: STANDARD_NODE_HEIGHT,
   })
 
-  const calculatedWidth = Math.max(...sectionBackgrounds.map((s) => s.x + s.width + 40), DEFAULT_CANVAS_WIDTH)
-  const calculatedHeight = Math.max(...sectionBackgrounds.map((s) => s.y + s.height + 40), DEFAULT_CANVAS_HEIGHT)
+  const totalSectionsWidth = sectionBackgrounds.reduce((sum, section, index) => {
+    return sum + section.width + (index > 0 ? sectionGap : 0)
+  }, 0)
+
+  console.log("[v0] FlowSkeletonLoader - Total sections width:", totalSectionsWidth)
 
   return (
     <div
-      className="flex h-full w-full justify-center overflow-auto bg-[#eeeff3ff]"
+      className="flex h-full w-full items-center justify-center bg-[#eeeff3ff]"
       style={{
         background: "#eeeff3ff",
       }}
@@ -192,88 +195,50 @@ export function FlowSkeletonLoader({
         </div>
       </div>
 
-      <div
-        className="relative mx-auto my-20 max-w-7xl"
-        style={{
-          width: `${calculatedWidth}px`,
-          height: `${calculatedHeight}px`,
-          padding: "40px",
-        }}
-      >
-        {/* Grid background */}
-        <div className="absolute inset-0">
-          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                <circle cx="1" cy="1" r="1" fill="#cbd5e1" opacity="0.4" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-          </svg>
-        </div>
+      <div className="mx-auto flex max-w-[1600px] items-start justify-center gap-4 px-8 py-20">
+        {sectionBackgrounds.map((section, sectionIndex) => {
+          const sectionNodes = skeletonNodes.filter((node) => node.sectionId === section.id)
 
-        {/* Section backgrounds */}
-        <div className="absolute inset-0">
-          {sectionBackgrounds.map((section, index) => (
+          return (
             <div
               key={section.id}
-              className="absolute rounded-2xl border-2 border-gray-400 bg-white p-8 shadow-xl transition-shadow hover:shadow-2xl"
+              className="relative flex-shrink-0 rounded-2xl border-2 border-gray-400 bg-white p-8 shadow-xl transition-shadow hover:shadow-2xl"
               style={{
-                left: `${section.x + 40 + index * sectionGap}px`,
-                top: `${section.y + 40}px`,
                 width: `${section.width}px`,
-                height: `${section.height}px`,
+                minHeight: `${section.height}px`,
               }}
             >
+              {/* Section header */}
               <div className="mb-8 flex items-center justify-between border-b-2 border-gray-300 pb-5">
                 <Skeleton className="h-8 w-72 animate-pulse rounded-lg bg-gray-300" />
                 <Skeleton className="h-7 w-28 animate-pulse rounded-lg bg-gray-300" />
               </div>
-            </div>
-          ))}
-        </div>
 
-        {/* Skeleton nodes */}
-        <div className="absolute inset-0">
-          {skeletonNodes.map((node) => {
-            const sectionIndex = sectionBackgrounds.findIndex((s) => s.id === node.sectionId)
-            return (
-              <div
-                key={node.id}
-                className="absolute"
-                style={{
-                  left: `${node.x + 40 + sectionIndex * sectionGap}px`,
-                  top: `${node.y + 40}px`,
-                  width: `${node.width}px`,
-                  height: `${node.height}px`,
-                }}
-              >
-                <CardLoadingSkeleton className="h-full w-full shadow-lg" size="lg" />
+              <div className="relative">
+                {sectionNodes.map((node, nodeIndex) => (
+                  <div
+                    key={node.id}
+                    className="absolute"
+                    style={{
+                      left: `${node.x - section.x}px`,
+                      top: `${node.y - section.y}px`,
+                      width: `${node.width}px`,
+                      height: `${node.height}px`,
+                    }}
+                  >
+                    <CardLoadingSkeleton className="h-full w-full shadow-lg" size="lg" />
+                  </div>
+                ))}
               </div>
-            )
-          })}
-        </div>
 
-        {/* Connection lines */}
-        <svg className="pointer-events-none absolute inset-0" style={{ zIndex: 5 }}>
-          {sectionBackgrounds.length >= 2 &&
-            sectionBackgrounds.slice(0, -1).map((section, index) => {
-              const nextSection = sectionBackgrounds[index + 1]
-              return (
-                <line
-                  key={`connection-${section.id}-${nextSection.id}`}
-                  x1={section.x + section.width + 40 + index * sectionGap}
-                  y1={section.y + section.height / 2 + 40}
-                  x2={nextSection.x + 40 + (index + 1) * sectionGap}
-                  y2={nextSection.y + nextSection.height / 2 + 40}
-                  stroke="#475569"
-                  strokeWidth="4"
-                  strokeDasharray="10 6"
-                  className="animate-pulse"
-                />
-              )
-            })}
-        </svg>
+              {sectionIndex < sectionBackgrounds.length - 1 && (
+                <div className="absolute right-0 top-1/2 z-10 h-1 w-4 -translate-y-1/2 translate-x-full bg-gray-400">
+                  <div className="h-full w-full animate-pulse bg-gray-500" />
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )
