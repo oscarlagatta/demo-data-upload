@@ -57,7 +57,8 @@ const DEFAULT_CANVAS_HEIGHT = 1200
 const DEFAULT_TOP_OFFSET = 150
 const DEFAULT_SECTION_GAP = 10
 const STANDARD_NODE_WIDTH = 200 // Increased from 175 to 200 for better proportions
-const STANDARD_NODE_HEIGHT = 120 // Increased from 100 to 120 for taller, more representative placeholders
+const STANDARD_NODE_HEIGHT = 100 // Reduced from 120 to 100 for better proportions
+const FIXED_SECTION_HEIGHT = 600 // Fixed height for all sections to maintain balance
 
 export function FlowSkeletonLoader({
   layOutConfig = [],
@@ -188,14 +189,14 @@ export function FlowSkeletonLoader({
         background: "#eeeff3ff",
       }}
     >
-      <div className="fixed left-1/2 top-6 z-30 -translate-x-1/2">
+      <div className="fixed left-1/2 top-12 z-30 -translate-x-1/2">
         <div className="flex items-center gap-4 rounded-2xl border-2 border-blue-400 bg-white px-8 py-4 shadow-2xl">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
           <span className="text-lg font-bold text-blue-800">Loading flow diagram...</span>
         </div>
       </div>
 
-      <div className="mx-auto flex max-w-[1600px] items-start justify-center gap-4 px-8 py-20">
+      <div className="mx-auto flex max-w-[1600px] items-start justify-center gap-4 px-8 py-32">
         {sectionBackgrounds.map((section, sectionIndex) => {
           const sectionNodes = skeletonNodes.filter((node) => node.sectionId === section.id)
 
@@ -205,7 +206,7 @@ export function FlowSkeletonLoader({
               className="relative flex-shrink-0 rounded-2xl border-2 border-gray-400 bg-white p-8 shadow-xl transition-shadow hover:shadow-2xl"
               style={{
                 width: `${section.width}px`,
-                minHeight: `${section.height}px`,
+                height: `${FIXED_SECTION_HEIGHT}px`,
               }}
             >
               {/* Section header */}
@@ -214,7 +215,7 @@ export function FlowSkeletonLoader({
                 <Skeleton className="h-7 w-28 animate-pulse rounded-lg bg-gray-300" />
               </div>
 
-              <div className="relative">
+              <div className="relative overflow-hidden" style={{ height: `${FIXED_SECTION_HEIGHT - 120}px` }}>
                 {sectionNodes.map((node, nodeIndex) => (
                   <div
                     key={node.id}
@@ -226,7 +227,7 @@ export function FlowSkeletonLoader({
                       height: `${node.height}px`,
                     }}
                   >
-                    <CardLoadingSkeleton className="h-full w-full shadow-lg" size="lg" />
+                    <CardLoadingSkeleton className="h-full w-full shadow-lg" size="md" />
                   </div>
                 ))}
               </div>
