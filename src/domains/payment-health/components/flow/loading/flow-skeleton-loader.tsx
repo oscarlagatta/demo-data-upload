@@ -180,12 +180,12 @@ export function FlowSkeletonLoader({
 
   return (
     <div
-      className="h-full w-full overflow-auto bg-[#eeeff3ff]"
+      className="flex h-full w-full justify-center overflow-auto bg-[#eeeff3ff]"
       style={{
         background: "#eeeff3ff",
       }}
     >
-      <div className="sticky left-0 right-0 top-6 z-30 flex justify-center">
+      <div className="fixed left-1/2 top-6 z-30 -translate-x-1/2">
         <div className="flex items-center gap-4 rounded-2xl border-2 border-blue-400 bg-white px-8 py-4 shadow-2xl">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
           <span className="text-lg font-bold text-blue-800">Loading flow diagram...</span>
@@ -193,11 +193,11 @@ export function FlowSkeletonLoader({
       </div>
 
       <div
-        className="relative"
+        className="relative mx-auto my-20 max-w-7xl"
         style={{
           width: `${calculatedWidth}px`,
           height: `${calculatedHeight}px`,
-          padding: "40px", // Increased padding for better spacing
+          padding: "40px",
         }}
       >
         {/* Grid background */}
@@ -214,12 +214,12 @@ export function FlowSkeletonLoader({
 
         {/* Section backgrounds */}
         <div className="absolute inset-0">
-          {sectionBackgrounds.map((section) => (
+          {sectionBackgrounds.map((section, index) => (
             <div
               key={section.id}
               className="absolute rounded-2xl border-2 border-gray-400 bg-white p-8 shadow-xl transition-shadow hover:shadow-2xl"
               style={{
-                left: `${section.x + 40}px`,
+                left: `${section.x + 40 + index * sectionGap}px`,
                 top: `${section.y + 40}px`,
                 width: `${section.width}px`,
                 height: `${section.height}px`,
@@ -235,20 +235,23 @@ export function FlowSkeletonLoader({
 
         {/* Skeleton nodes */}
         <div className="absolute inset-0">
-          {skeletonNodes.map((node) => (
-            <div
-              key={node.id}
-              className="absolute"
-              style={{
-                left: `${node.x + 40}px`,
-                top: `${node.y + 40}px`,
-                width: `${node.width}px`,
-                height: `${node.height}px`,
-              }}
-            >
-              <CardLoadingSkeleton className="h-full w-full shadow-lg" size="lg" />
-            </div>
-          ))}
+          {skeletonNodes.map((node) => {
+            const sectionIndex = sectionBackgrounds.findIndex((s) => s.id === node.sectionId)
+            return (
+              <div
+                key={node.id}
+                className="absolute"
+                style={{
+                  left: `${node.x + 40 + sectionIndex * sectionGap}px`,
+                  top: `${node.y + 40}px`,
+                  width: `${node.width}px`,
+                  height: `${node.height}px`,
+                }}
+              >
+                <CardLoadingSkeleton className="h-full w-full shadow-lg" size="lg" />
+              </div>
+            )
+          })}
         </div>
 
         {/* Connection lines */}
@@ -259,9 +262,9 @@ export function FlowSkeletonLoader({
               return (
                 <line
                   key={`connection-${section.id}-${nextSection.id}`}
-                  x1={section.x + section.width + 40}
+                  x1={section.x + section.width + 40 + index * sectionGap}
                   y1={section.y + section.height / 2 + 40}
-                  x2={nextSection.x + 40}
+                  x2={nextSection.x + 40 + (index + 1) * sectionGap}
                   y2={nextSection.y + nextSection.height / 2 + 40}
                   stroke="#475569"
                   strokeWidth="4"
