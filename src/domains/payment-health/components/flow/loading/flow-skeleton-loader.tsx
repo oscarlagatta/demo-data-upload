@@ -50,8 +50,8 @@ interface FlowSkeletonLoaderProps {
 }
 
 const DEFAULT_CANVAS_WIDTH = 1650
-const DEFAULT_CANVAS_HEIGHT = 960
-const DEFAULT_TOP_OFFSET = 50 // Default vertical offset for node alignment
+const DEFAULT_CANVAS_HEIGHT = 1150
+const DEFAULT_TOP_OFFSET = 150 // Default vertical offset for node alignment
 const DEFAULT_SECTION_GAP = 10 // Default gap between sections
 const STANDARD_NODE_WIDTH = 175 // Fixed node width for all nodes
 const STANDARD_NODE_HEIGHT = 96 // Fixed node height for all nodes

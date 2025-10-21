@@ -8,7 +8,7 @@
       "draggable": false,
       "selectable": false,
       "zIndex": -1,
-      "style": { "width": "350px", "height": "960px" },
+      "style": { "width": "539px", "height": "1150px" },
       "sectionPositions": {
         "sections": {
           "bg-origination": {
@@ -32,7 +32,7 @@
       "draggable": false,
       "selectable": false,
       "zIndex": -1,
-      "style": { "width": "350px", "height": "960px" },
+      "style": { "width": "539px", "height": "1150px" },
       "sectionPositions": {
         "sections": {
           "bg-validation": {
@@ -57,7 +57,7 @@
       "draggable": false,
       "selectable": false,
       "zIndex": -1,
-      "style": { "width": "450px", "height": "960px" },
+      "style": { "width": "674px", "height": "1150px" },
       "sectionPositions": {
         "sections": {
           "bg-middleware": {
@@ -75,7 +75,7 @@
       "draggable": false,
       "selectable": false,
       "zIndex": -1,
-      "style": { "width": "500px", "height": "960px" },
+      "style": { "width": "944px", "height": "1150px" },
       "sectionPositions": {
         "sections": {
           "bg-processing": {
