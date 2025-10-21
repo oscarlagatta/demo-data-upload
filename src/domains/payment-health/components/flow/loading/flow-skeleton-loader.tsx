@@ -37,7 +37,10 @@ interface LayoutSection {
   id: string
   position: { x: number; y: number }
   data: Record<string, any>
-  style: CSSProperties // Contains width and height for dynamic section sizing
+  style: {
+    width: string | number
+    height: string | number
+  } & CSSProperties
   sectionPositions: SectionPositions
 }
 
@@ -90,17 +93,28 @@ export function FlowSkeletonLoader({
     })
   }
 
-  const parseDimension = (value: string | number | undefined, defaultValue: number): number => {
+  const parseDimension = (value: string | number): number => {
     if (typeof value === "number") return value
-    if (typeof value === "string") return Number.parseInt(value.replace("px", ""), 10) || defaultValue
-    return defaultValue
+    if (typeof value === "string") {
+      const parsed = Number.parseInt(value.replace("px", ""), 10)
+      if (isNaN(parsed)) {
+        console.warn("[v0] FlowSkeletonLoader - Failed to parse dimension:", value)
+        return 0
+      }
+      return parsed
+    }
+    return 0
   }
 
   // Generate section backgrounds from layout config
   const sectionBackgrounds = layOutConfig.map((section) => {
     const data = section.data as { title?: string; label?: string }
-    const width = parseDimension(section.style.width, 350)
-    const height = parseDimension(section.style.height, 960)
+    const width = parseDimension(section.style.width)
+    const height = parseDimension(section.style.height)
+
+    if (width === 0 || height === 0) {
+      console.warn("[v0] FlowSkeletonLoader - Section has invalid dimensions:", section.id, { width, height })
+    }
 
     console.log("[v0] FlowSkeletonLoader - Section:", section.id, "dimensions:", { width, height })
 
