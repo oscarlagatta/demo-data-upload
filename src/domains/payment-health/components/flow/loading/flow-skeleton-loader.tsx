@@ -52,7 +52,7 @@ interface FlowSkeletonLoaderProps {
   sectionGap?: number // Gap between sections in pixels
 }
 
-const DEFAULT_CANVAS_WIDTH = 1650
+const DEFAULT_CANVAS_WIDTH = 2100 // Increased to accommodate all sections with proper spacing
 const DEFAULT_CANVAS_HEIGHT = 1150
 const DEFAULT_TOP_OFFSET = 150 // Default vertical offset for node alignment
 const DEFAULT_SECTION_GAP = 10 // Default gap between sections
@@ -66,13 +66,12 @@ export function FlowSkeletonLoader({
   firstNodeTopOffset = DEFAULT_TOP_OFFSET,
   sectionGap = DEFAULT_SECTION_GAP,
 }: FlowSkeletonLoaderProps) {
-  // If no layout config provided, show a simple loading state
   if (!layOutConfig || layOutConfig.length === 0) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-[#eeeff3ff]">
-        <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-white px-4 py-2 shadow-sm">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-          <span className="text-sm font-medium text-blue-600">Loading flow diagram...</span>
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+          <span className="text-base font-medium text-gray-700">Loading flow diagram...</span>
         </div>
       </div>
     )
@@ -177,92 +176,94 @@ export function FlowSkeletonLoader({
 
   return (
     <div
-      className="absolute inset-0 h-full w-full overflow-hidden"
+      className="h-full w-full overflow-auto"
       style={{
         background: "#eeeff3ff",
-        minWidth: `${canvasWidth}px`,
-        minHeight: `${canvasHeight}px`,
       }}
     >
-      {/* Background grid matching ReactFlow */}
-      <div className="absolute inset-0">
-        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="grid" width="16" height="16" patternUnits="userSpaceOnUse">
-              <circle cx="0.5" cy="0.5" r="0.5" fill="#d1d5db" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" />
+      <div
+        className="relative"
+        style={{
+          minWidth: `${canvasWidth}px`,
+          minHeight: `${canvasHeight}px`,
+        }}
+      >
+        {/* Background grid matching ReactFlow */}
+        <div className="absolute inset-0">
+          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid" width="16" height="16" patternUnits="userSpaceOnUse">
+                <circle cx="0.5" cy="0.5" r="0.5" fill="#d1d5db" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)" />
+          </svg>
+        </div>
+
+        <div className="absolute left-1/2 top-8 z-20 -translate-x-1/2">
+          <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-white px-6 py-3 shadow-md">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+            <span className="text-sm font-semibold text-blue-600">Loading flow diagram...</span>
+          </div>
+        </div>
+
+        <div className="absolute inset-0">
+          {sectionBackgrounds.map((section) => (
+            <div
+              key={section.id}
+              className="absolute rounded-lg border border-gray-300 bg-white p-6 shadow-md"
+              style={{
+                left: `${section.x}px`,
+                top: `${section.y}px`,
+                width: `${section.width}px`,
+                height: `${section.height}px`,
+              }}
+            >
+              <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-3">
+                <Skeleton className="h-6 w-56 animate-pulse rounded" />
+                <Skeleton className="h-5 w-20 animate-pulse rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="absolute inset-0">
+          {skeletonNodes.map((node) => (
+            <div
+              key={node.id}
+              className="absolute"
+              style={{
+                left: `${node.x}px`,
+                top: `${node.y}px`,
+                width: `${node.width}px`,
+                height: `${node.height}px`,
+              }}
+            >
+              <CardLoadingSkeleton className="h-full w-full shadow-sm" />
+            </div>
+          ))}
+        </div>
+
+        <svg className="pointer-events-none absolute inset-0" style={{ zIndex: 1 }}>
+          {sectionBackgrounds.length >= 2 &&
+            sectionBackgrounds.slice(0, -1).map((section, index) => {
+              const nextSection = sectionBackgrounds[index + 1]
+              return (
+                <line
+                  key={`connection-${section.id}-${nextSection.id}`}
+                  x1={section.x + section.width + sectionGap / 2}
+                  y1={section.y + section.height / 2}
+                  x2={nextSection.x - sectionGap / 2}
+                  y2={nextSection.y + nextSection.height / 2}
+                  stroke="#9ca3af"
+                  strokeWidth="2"
+                  strokeDasharray="6 4"
+                  className="animate-pulse"
+                />
+              )
+            })}
         </svg>
       </div>
-
-      {/* Loading indicator overlay */}
-      <div className="absolute left-1/2 top-4 z-20 -translate-x-1/2">
-        <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-white px-4 py-2 shadow-sm">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-          <span className="text-sm font-medium text-blue-600">Loading flow diagram...</span>
-        </div>
-      </div>
-
-      {/* Section backgrounds */}
-      <div className="absolute inset-0">
-        {sectionBackgrounds.map((section) => (
-          <div
-            key={section.id}
-            className="absolute rounded-lg border-2 border-gray-200 bg-white/60 p-4 shadow-sm"
-            style={{
-              left: `${section.x}px`,
-              top: `${section.y}px`,
-              width: `${section.width}px`,
-              height: `${section.height}px`,
-            }}
-          >
-            <div className="mb-2 flex items-center justify-between border-b border-gray-200 pb-2">
-              <Skeleton className="h-5 w-48 animate-pulse" />
-              <Skeleton className="h-4 w-16 animate-pulse" />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Skeleton nodes */}
-      <div className="absolute inset-0">
-        {skeletonNodes.map((node) => (
-          <div
-            key={node.id}
-            className="absolute"
-            style={{
-              left: `${node.x}px`,
-              top: `${node.y}px`,
-              width: `${node.width}px`,
-              height: `${node.height}px`,
-            }}
-          >
-            <CardLoadingSkeleton className="h-full w-full" />
-          </div>
-        ))}
-      </div>
-
-      {/* Connection line skeletons between sections */}
-      <svg className="pointer-events-none absolute inset-0" style={{ zIndex: 1 }}>
-        {sectionBackgrounds.length >= 2 &&
-          sectionBackgrounds.slice(0, -1).map((section, index) => {
-            const nextSection = sectionBackgrounds[index + 1]
-            return (
-              <line
-                key={`connection-${section.id}-${nextSection.id}`}
-                x1={section.x + section.width + sectionGap / 2}
-                y1={section.y + section.height / 2}
-                x2={nextSection.x - sectionGap / 2}
-                y2={nextSection.y + nextSection.height / 2}
-                stroke="#d1d5db"
-                strokeWidth="2"
-                strokeDasharray="4 4"
-                className="animate-pulse"
-              />
-            )
-          })}
-      </svg>
     </div>
   )
 }
