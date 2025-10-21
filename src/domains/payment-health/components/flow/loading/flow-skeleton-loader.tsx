@@ -52,12 +52,12 @@ interface FlowSkeletonLoaderProps {
   sectionGap?: number // Gap between sections in pixels
 }
 
-const DEFAULT_CANVAS_WIDTH = 2100 // Increased to accommodate all sections with proper spacing
-const DEFAULT_CANVAS_HEIGHT = 1150
+const DEFAULT_CANVAS_WIDTH = 2200 // Increased to accommodate all sections with proper spacing
+const DEFAULT_CANVAS_HEIGHT = 1200
 const DEFAULT_TOP_OFFSET = 150 // Default vertical offset for node alignment
 const DEFAULT_SECTION_GAP = 10 // Default gap between sections
 const STANDARD_NODE_WIDTH = 175 // Fixed node width for all nodes
-const STANDARD_NODE_HEIGHT = 96 // Fixed node height for all nodes
+const STANDARD_NODE_HEIGHT = 100 // Fixed node height for all nodes
 
 export function FlowSkeletonLoader({
   layOutConfig = [],
@@ -69,9 +69,10 @@ export function FlowSkeletonLoader({
   if (!layOutConfig || layOutConfig.length === 0) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-[#eeeff3ff]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
-          <span className="text-base font-medium text-gray-700">Loading flow diagram...</span>
+        <div className="flex flex-col items-center gap-4 rounded-xl border border-blue-200 bg-white px-8 py-6 shadow-lg">
+          <div className="h-14 w-14 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+          <span className="text-lg font-semibold text-gray-800">Loading flow diagram...</span>
+          <span className="text-sm text-gray-500">Preparing your data visualization</span>
         </div>
       </div>
     )
@@ -174,54 +175,57 @@ export function FlowSkeletonLoader({
     height: STANDARD_NODE_HEIGHT,
   })
 
+  const calculatedWidth = Math.max(...sectionBackgrounds.map((s) => s.x + s.width), DEFAULT_CANVAS_WIDTH)
+  const calculatedHeight = Math.max(...sectionBackgrounds.map((s) => s.y + s.height), DEFAULT_CANVAS_HEIGHT)
+
   return (
     <div
-      className="h-full w-full overflow-auto"
+      className="h-full w-full overflow-auto bg-[#eeeff3ff]" // Added explicit background color
       style={{
         background: "#eeeff3ff",
       }}
     >
+      <div className="sticky left-0 right-0 top-4 z-30 flex justify-center">
+        <div className="flex items-center gap-3 rounded-xl border-2 border-blue-300 bg-white px-6 py-3 shadow-xl">
+          <div className="h-6 w-6 animate-spin rounded-full border-3 border-blue-600 border-t-transparent" />
+          <span className="text-base font-semibold text-blue-700">Loading flow diagram...</span>
+        </div>
+      </div>
+
       <div
         className="relative"
         style={{
-          minWidth: `${canvasWidth}px`,
-          minHeight: `${canvasHeight}px`,
+          width: `${calculatedWidth}px`, // Use calculated width instead of minWidth
+          height: `${calculatedHeight}px`, // Use calculated height instead of minHeight
+          padding: "20px", // Add padding around the entire canvas
         }}
       >
-        {/* Background grid matching ReactFlow */}
         <div className="absolute inset-0">
           <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <pattern id="grid" width="16" height="16" patternUnits="userSpaceOnUse">
-                <circle cx="0.5" cy="0.5" r="0.5" fill="#d1d5db" />
+              <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                <circle cx="1" cy="1" r="1" fill="#cbd5e1" opacity="0.5" />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#grid)" />
           </svg>
         </div>
 
-        <div className="absolute left-1/2 top-8 z-20 -translate-x-1/2">
-          <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-white px-6 py-3 shadow-md">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-            <span className="text-sm font-semibold text-blue-600">Loading flow diagram...</span>
-          </div>
-        </div>
-
         <div className="absolute inset-0">
           {sectionBackgrounds.map((section) => (
             <div
               key={section.id}
-              className="absolute rounded-lg border border-gray-300 bg-white p-6 shadow-md"
+              className="absolute rounded-xl border-2 border-gray-300 bg-white p-6 shadow-lg transition-shadow hover:shadow-xl" // Improved border, shadow, and padding
               style={{
-                left: `${section.x}px`,
-                top: `${section.y}px`,
+                left: `${section.x + 20}px`, // Account for canvas padding
+                top: `${section.y + 20}px`, // Account for canvas padding
                 width: `${section.width}px`,
                 height: `${section.height}px`,
               }}
             >
-              <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-3">
-                <Skeleton className="h-6 w-56 animate-pulse rounded" />
-                <Skeleton className="h-5 w-20 animate-pulse rounded" />
+              <div className="mb-6 flex items-center justify-between border-b-2 border-gray-200 pb-4">
+                <Skeleton className="h-7 w-64 animate-pulse rounded-md bg-gray-200" />
+                <Skeleton className="h-6 w-24 animate-pulse rounded-md bg-gray-200" />
               </div>
             </div>
           ))}
@@ -233,31 +237,31 @@ export function FlowSkeletonLoader({
               key={node.id}
               className="absolute"
               style={{
-                left: `${node.x}px`,
-                top: `${node.y}px`,
+                left: `${node.x + 20}px`, // Account for canvas padding
+                top: `${node.y + 20}px`, // Account for canvas padding
                 width: `${node.width}px`,
                 height: `${node.height}px`,
               }}
             >
-              <CardLoadingSkeleton className="h-full w-full shadow-sm" />
+              <CardLoadingSkeleton className="h-full w-full shadow-md" /> {/* Enhanced shadow */}
             </div>
           ))}
         </div>
 
-        <svg className="pointer-events-none absolute inset-0" style={{ zIndex: 1 }}>
+        <svg className="pointer-events-none absolute inset-0" style={{ zIndex: 5 }}>
           {sectionBackgrounds.length >= 2 &&
             sectionBackgrounds.slice(0, -1).map((section, index) => {
               const nextSection = sectionBackgrounds[index + 1]
               return (
                 <line
                   key={`connection-${section.id}-${nextSection.id}`}
-                  x1={section.x + section.width + sectionGap / 2}
-                  y1={section.y + section.height / 2}
-                  x2={nextSection.x - sectionGap / 2}
-                  y2={nextSection.y + nextSection.height / 2}
-                  stroke="#9ca3af"
-                  strokeWidth="2"
-                  strokeDasharray="6 4"
+                  x1={section.x + section.width + 20} // Account for canvas padding
+                  y1={section.y + section.height / 2 + 20}
+                  x2={nextSection.x + 20}
+                  y2={nextSection.y + nextSection.height / 2 + 20}
+                  stroke="#64748b" // Darker stroke for better visibility
+                  strokeWidth="3" // Thicker line
+                  strokeDasharray="8 6" // Better dash pattern
                   className="animate-pulse"
                 />
               )
