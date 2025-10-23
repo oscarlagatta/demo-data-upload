@@ -3,11 +3,13 @@
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { MoreVertical } from "lucide-react"
+import type { ReactNode } from "react"
 
 interface NodeAction {
   label: string
   onClick: () => void
   disabled?: boolean
+  icon?: ReactNode
 }
 
 interface NodeActionsMenuProps {
@@ -43,6 +45,7 @@ export function NodeActionsMenu({ actions, position = "top-right" }: NodeActions
         <DropdownMenuContent align="end" className="w-48">
           {actions.map((action, index) => (
             <DropdownMenuItem key={index} onClick={action.onClick} disabled={action.disabled}>
+              {action.icon && <span className="mr-2">{action.icon}</span>}
               {action.label}
             </DropdownMenuItem>
           ))}

@@ -1,6 +1,7 @@
 "use client"
 
 import { memo } from "react"
+import { useState, useCallback } from "react"
 import type { NodeProps } from "@xyflow/react"
 import { useTransactionSearchUsWiresContext } from "@/domains/payment-health/providers/us-wires/us-wires-transaction-search-provider"
 import { CardLoadingSkeleton } from "../../../loading/loading-skeleton"
@@ -12,6 +13,9 @@ import { NodeHeader } from "./components/NodeHeader"
 import { NodeActionsMenu } from "./components/NodeActionsMenu"
 import { NodeActionButtons } from "./components/NodeActionButtons"
 import { NodeHandles } from "./components/NodeHandles"
+import { NodeEditDialog, type NodeEditData } from "./components/NodeEditDialog"
+import { useNodeConfiguration } from "@/domains/payment-health/hooks/useNodeConfiguration"
+import { Edit } from "lucide-react"
 import type { CustomNodeType } from "./types"
 
 interface CustomNodeUsWiresProps extends NodeProps<CustomNodeType> {
@@ -80,6 +84,22 @@ const CustomNodeUsWires = ({
     showTable,
   })
 
+  const { saveNodeConfiguration } = useNodeConfiguration()
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+
+  const handleEditNode = useCallback(() => {
+    console.log("[v0] CustomNodeUsWires: Opening edit dialog for node", id)
+    setIsEditDialogOpen(true)
+  }, [id])
+
+  const handleSaveNodeConfig = useCallback(
+    async (updatedData: NodeEditData) => {
+      console.log("[v0] CustomNodeUsWires: Saving node configuration", updatedData)
+      await saveNodeConfiguration(updatedData)
+    },
+    [saveNodeConfiguration],
+  )
+
   if (isDataLoading) {
     return <CardLoadingSkeleton className="w-full" />
   }
@@ -93,7 +113,16 @@ const CustomNodeUsWires = ({
       <NodeCard className={cardClassName} onClick={handleClick} testId={`custom-node-${id}`}>
         <NodeHandles />
 
-        <NodeActionsMenu actions={[{ label: "Create Incident Ticket", onClick: handleCreateIncident }]} />
+        <NodeActionsMenu
+          actions={[
+            {
+              label: "Edit Node Configuration",
+              onClick: handleEditNode,
+              icon: <Edit className="h-4 w-4" />,
+            },
+            { label: "Create Incident Ticket", onClick: handleCreateIncident },
+          ]}
+        />
 
         <NodeHeader
           title={data.title}
@@ -117,6 +146,19 @@ const CustomNodeUsWires = ({
           onDetailsClick={handleDetailsClick}
         />
       </NodeCard>
+
+      <NodeEditDialog
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        nodeData={{
+          id,
+          title: data.title,
+          subtext: data.subtext,
+          averageThruputTime30: data.averageThruputTime30,
+          currentThruputTime30: data.currentThruputTime30,
+        }}
+        onSave={handleSaveNodeConfig}
+      />
 
       <IncidentSheet
         isOpen={isIncidentSheetOpen}

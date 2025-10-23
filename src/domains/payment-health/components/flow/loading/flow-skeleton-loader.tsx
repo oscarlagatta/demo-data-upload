@@ -196,50 +196,53 @@ export function FlowSkeletonLoader({
         </div>
       </div>
 
-      <div className="mx-auto flex max-w-[1600px] items-start justify-center gap-4 px-8 py-32">
-        {sectionBackgrounds.map((section, sectionIndex) => {
-          const sectionNodes = skeletonNodes.filter((node) => node.sectionId === section.id)
+      <div className="mx-auto w-full max-w-[1400px] px-6 py-32">
+        <div className="flex items-start justify-center gap-4 overflow-x-auto">
+          {sectionBackgrounds.map((section, sectionIndex) => {
+            const sectionNodes = skeletonNodes.filter((node) => node.sectionId === section.id)
 
-          return (
-            <div
-              key={section.id}
-              className="relative flex-shrink-0 rounded-2xl border-2 border-gray-400 bg-white p-8 shadow-xl transition-shadow hover:shadow-2xl"
-              style={{
-                width: `${section.width}px`,
-                height: `${FIXED_SECTION_HEIGHT}px`,
-              }}
-            >
-              {/* Section header */}
-              <div className="mb-8 flex items-center justify-between border-b-2 border-gray-300 pb-5">
-                <Skeleton className="h-8 w-72 animate-pulse rounded-lg bg-gray-300" />
-                <Skeleton className="h-7 w-28 animate-pulse rounded-lg bg-gray-300" />
-              </div>
-
-              <div className="relative overflow-hidden" style={{ height: `${FIXED_SECTION_HEIGHT - 120}px` }}>
-                {sectionNodes.map((node, nodeIndex) => (
-                  <div
-                    key={node.id}
-                    className="absolute"
-                    style={{
-                      left: `${node.x - section.x}px`,
-                      top: `${node.y - section.y}px`,
-                      width: `${node.width}px`,
-                      height: `${node.height}px`,
-                    }}
-                  >
-                    <CardLoadingSkeleton className="h-full w-full shadow-lg" size="md" />
-                  </div>
-                ))}
-              </div>
-
-              {sectionIndex < sectionBackgrounds.length - 1 && (
-                <div className="absolute right-0 top-1/2 z-10 h-1 w-4 -translate-y-1/2 translate-x-full bg-gray-400">
-                  <div className="h-full w-full animate-pulse bg-gray-500" />
+            return (
+              <div
+                key={section.id}
+                className="relative flex-shrink-0 rounded-2xl border-2 border-gray-400 bg-white p-8 shadow-xl transition-shadow hover:shadow-2xl"
+                style={{
+                  minWidth: `${Math.min(section.width, 280)}px`,
+                  maxWidth: `${section.width}px`,
+                  height: `${FIXED_SECTION_HEIGHT}px`,
+                }}
+              >
+                {/* Section header */}
+                <div className="mb-8 flex items-center justify-between border-b-2 border-gray-300 pb-5">
+                  <Skeleton className="h-8 w-3/4 animate-pulse rounded-lg bg-gray-300" />
+                  <Skeleton className="h-7 w-1/4 animate-pulse rounded-lg bg-gray-300" />
                 </div>
-              )}
-            </div>
-          )
-        })}
+
+                <div className="relative overflow-hidden" style={{ height: `${FIXED_SECTION_HEIGHT - 120}px` }}>
+                  {sectionNodes.map((node, nodeIndex) => (
+                    <div
+                      key={node.id}
+                      className="absolute"
+                      style={{
+                        left: `${node.x - section.x}px`,
+                        top: `${node.y - section.y}px`,
+                        width: `${node.width}px`,
+                        height: `${node.height}px`,
+                      }}
+                    >
+                      <CardLoadingSkeleton className="h-full w-full shadow-lg" size="md" />
+                    </div>
+                  ))}
+                </div>
+
+                {sectionIndex < sectionBackgrounds.length - 1 && (
+                  <div className="absolute right-0 top-1/2 z-10 h-1 w-4 -translate-y-1/2 translate-x-full bg-gray-400">
+                    <div className="h-full w-full animate-pulse bg-gray-500" />
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
       </div>
     </div>
   )
