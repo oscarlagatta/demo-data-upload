@@ -4,6 +4,11 @@ import { BaseEdge, EdgeLabelRenderer, getBezierPath, type EdgeProps } from "@xyf
 import { X } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 
+export interface DeleteButtonEdgeData {
+  onDelete?: (edgeId: string) => void
+  label?: string
+}
+
 export function DeleteButtonEdge({
   id,
   sourceX,
@@ -15,7 +20,7 @@ export function DeleteButtonEdge({
   style = {},
   markerEnd,
   data,
-}: EdgeProps) {
+}: EdgeProps<DeleteButtonEdgeData>) {
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -26,7 +31,6 @@ export function DeleteButtonEdge({
   })
 
   const onEdgeDelete = () => {
-    // Call the delete handler passed from parent
     data?.onDelete?.(id)
   }
 
@@ -53,7 +57,6 @@ export function DeleteButtonEdge({
           >
             <X className="h-3 w-3" />
           </Button>
-          {/* </CHANGE> */}
         </div>
       </EdgeLabelRenderer>
     </>
