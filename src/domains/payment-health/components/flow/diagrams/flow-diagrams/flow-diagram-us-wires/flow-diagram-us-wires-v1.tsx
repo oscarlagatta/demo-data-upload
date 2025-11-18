@@ -326,8 +326,8 @@ const Flow = ({
 
       const sourceNode = nodes.find(n => n.id === edge.source)
       const targetNode = nodes.find(n => n.id === edge.target)
-      const sourceLabel = sourceNode?.data?.title || edge.source
-      const targetLabel = targetNode?.data?.title || edge.target
+      const sourceLabel = sourceNode?.data?.['title'] || edge.source
+      const targetLabel = targetNode?.data?.['title'] || edge.target
 
       return {
         ...edge,
@@ -549,8 +549,8 @@ const Flow = ({
                 // For now, show toast with edge info and delete option
                 const sourceNode = nodes.find(n => n.id === edge.source)
                 const targetNode = nodes.find(n => n.id === edge.target)
-                const sourceLabel = sourceNode?.data?.title || edge.source
-                const targetLabel = targetNode?.data?.title || edge.target
+                const sourceLabel = sourceNode?.data?.['title'] || edge.source
+                const targetLabel = targetNode?.data?.['title'] || edge.target
                 
                 // Simple confirmation for deletion
                 const shouldDelete = window.confirm(
