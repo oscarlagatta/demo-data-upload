@@ -20,7 +20,7 @@ import {
   ReactFlow,
   ReactFlowProvider,
   useStore,
-  ConnectionMode, // Import ConnectionMode enum
+  useReactFlow,
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 import { AlertCircle, Loader2, RefreshCw } from 'lucide-react'
@@ -38,6 +38,7 @@ import SplunkTableUsWiresBackend from "@/domains/payment-health/components/table
 import { TransactionDetailsTableAgGrid } from "@/domains/payment-health/components/tables/transaction-details-table-ag-grid/transaction-details-table-ag-grid"
 import CustomNodeUsWires from "@/domains/payment-health/components/flow/nodes/custom-nodes-us-wires/custom-node-us-wires"
 import SectionBackgroundNode from "@/domains/payment-health/components/flow/nodes/expandable-charts/section-background-node"
+import { EdgeContextMenu } from "@/domains/payment-health/components/flow/context-menu/EdgeContextMenu"
 
 const SECTION_IDS = ["bg-origination", "bg-validation", "bg-middleware", "bg-processing"]
 
@@ -82,17 +83,9 @@ const Flow = ({
   const [lastRefetch, setLastRefetch] = useState<Date | null>(null)
 
   const [canvasHeight, setCanvasHeight] = useState<number>(500) // default height
-
-  // Table mode state
-  const [tableMode, setTableMode] = useState<{
-    show: boolean
-    aitNum: string | null
-    action: ActionType | null
-  }>({
-    show: false,
-    aitNum: null,
-    action: null,
-  })
+  
+  const [isInitialized, setIsInitialized] = useState(false)
+  const { fitView } = useReactFlow()
 
   const width = useStore((state) => state.width)
 
@@ -172,6 +165,27 @@ const Flow = ({
     })
   }, [])
 
+  // Handler for deleting edges via context menu
+  const handleDeleteEdge = useCallback(
+    (edgeIdToDelete: string) => {
+      console.log("[v0] Deleting edge:", edgeIdToDelete)
+      
+      setEdges((currentEdges) => 
+        currentEdges.filter((edge) => edge.id !== edgeIdToDelete)
+      )
+      
+      // Clear selection if the deleted edge was part of selected connections
+      if (connectedEdgeIds.has(edgeIdToDelete)) {
+        setConnectedEdgeIds((prev) => {
+          const updated = new Set(prev)
+          updated.delete(edgeIdToDelete)
+          return updated
+        })
+      }
+    },
+    [connectedEdgeIds]
+  )
+
   // Get connected systems names for display
   const getConnectedSystemNames = useCallback(() => {
     if (!selectedNodeId) {
@@ -209,70 +223,14 @@ const Flow = ({
   useEffect(() => {
     if (flowEdges.length > 0) {
       setEdges(flowEdges)
+      if (!isInitialized) {
+        setTimeout(() => {
+          setIsInitialized(true)
+          fitView({ duration: 0, padding: 0.1 })
+        }, 100)
+      }
     }
-  }, [flowEdges])
-
-  useEffect(() => {
-    if (width > 0 && flowNodes.length > 0) {
-      setNodes((currentNodes) => {
-        const totalGapWidth = GAP_WIDTH * (SECTION_IDS.length - 1)
-        const availableWidth = width - totalGapWidth
-        let currentX = 0
-
-        const newNodes = [...currentNodes]
-        const sectionDimensions: Record<string, { x: number; width: number }> = {}
-
-        // First pass: update background nodes and store their new dimensions
-        for (let i = 0; i < SECTION_IDS.length; i++) {
-          const sectionId = SECTION_IDS[i]
-          const nodeIndex = newNodes.findIndex((n) => n.id === sectionId)
-
-          if (nodeIndex !== -1) {
-            const sectionWidth = availableWidth * SECTION_WIDTH_PROPORTIONS[i]
-            sectionDimensions[sectionId] = { x: currentX, width: sectionWidth }
-
-            newNodes[nodeIndex] = {
-              ...newNodes[nodeIndex],
-              position: { x: currentX, y: 0 },
-              style: {
-                ...newNodes[nodeIndex].style,
-                width: `${sectionWidth}px`,
-              },
-            }
-            currentX += sectionWidth + GAP_WIDTH
-          }
-        }
-
-        // second pass: update child nodes based on their parent's new dimensions
-        for (let i = 0; i < newNodes.length; i++) {
-          const node = newNodes[i]
-          if (node.parentId && sectionDimensions[node.parentId]) {
-            const parentDimensions = sectionDimensions[node.parentId]
-
-            const originalNode = flowNodes.find((n) => n.id === node.id)
-            const originalParent = flowNodes.find((n) => n.id === node.parentId)
-
-            if (originalNode && originalParent && originalParent.style?.width) {
-              const originalParentWidth = Number.parseFloat(originalParent.style.width as string)
-              const originalRelativeXOffset = originalNode.position.x - originalParent.position.x
-
-              const newAbsoluteX =
-                parentDimensions.x + (originalRelativeXOffset / originalParentWidth) * parentDimensions.width
-
-              newNodes[i] = {
-                ...node,
-                position: {
-                  x: newAbsoluteX,
-                  y: node.position.y,
-                },
-              }
-            }
-          }
-        }
-        return newNodes
-      })
-    }
-  }, [width, flowNodes])
+  }, [flowEdges, isInitialized, fitView])
 
   useEffect(() => {
     // calculate the bounding box of all nodes and adjust the canvas height
@@ -359,22 +317,45 @@ const Flow = ({
       const isConnected = connectedEdgeIds.has(edge.id)
       const isDimmed = selectedNodeId && !isConnected
 
+      const baseStrokeWidth = 2
+      const connectedStrokeWidth = 3
+      const baseColor = '#6b7280'
+      const connectedColor = '#3b82f6'
+      const dimmedColor = '#d1d5db'
+
+      const sourceNode = nodes.find(n => n.id === edge.source)
+      const targetNode = nodes.find(n => n.id === edge.target)
+      const sourceLabel = sourceNode?.data?.title || edge.source
+      const targetLabel = targetNode?.data?.title || edge.target
+
       return {
         ...edge,
         style: {
           ...edge.style,
-          strokeWidth: isConnected ? 3 : 2,
-          stroke: isConnected ? "#1d4ed8" : isDimmed ? "#d1d5db" : "#6b7280",
+          strokeWidth: isConnected ? connectedStrokeWidth : baseStrokeWidth,
+          stroke: isConnected ? connectedColor : isDimmed ? dimmedColor : baseColor,
           opacity: isDimmed ? 0.3 : 1,
-          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+          filter: isConnected ? 'drop-shadow(0 0 6px rgba(59, 130, 246, 0.4))' : undefined,
         },
-        className: `${isConnected ? "edge-connected" : ""} ${isDimmed ? "edge-dimmed" : ""}`,
+        className: `react-flow__edge ${isConnected ? "edge-connected" : ""} ${isDimmed ? "edge-dimmed" : ""}`,
         animated: isConnected,
         // Add interactivity properties for better hover detection
         interactionWidth: 20, // Wider invisible interaction area
+        markerEnd: {
+          ...edge.markerEnd,
+          type: MarkerType.ArrowClosed,
+          color: isConnected ? connectedColor : isDimmed ? dimmedColor : baseColor,
+        },
+        data: {
+          ...edge.data,
+          sourceLabel,
+          targetLabel,
+          onDelete: handleDeleteEdge,
+        },
       }
     })
-  }, [edges, connectedEdgeIds, selectedNodeId])
+  }, [edges, connectedEdgeIds, selectedNodeId, nodes, handleDeleteEdge])
 
   const renderDataPanel = () => {
     if (isLoading) {
@@ -521,33 +502,57 @@ const Flow = ({
               <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
             </Button>
           </div>
-          <ReactFlow
-            nodes={nodesForFlow}
-            edges={edgesForFlow}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            nodeTypes={nodeTypes}
-            proOptions={{ hideAttribution: true }}
-            className="bg-white"
-            style={{ background: "#eeeff3ff" }}
-            panOnDrag={false}
-            elementsSelectable={false}
-            minZoom={1}
-            maxZoom={1}
-            connectionMode={ConnectionMode.Loose} // Allows connections from any handle
-            connectionRadius={50} // Increased snap radius for easier connections
-            snapToGrid={false}
-            snapGrid={[15, 15]}
-            defaultEdgeOptions={{
-              type: 'smoothstep',
-              animated: false,
-              style: { strokeWidth: 2, stroke: '#6b7280' },
-            }}
-          >
-            <Controls />
-            <Background gap={16} size={1} />
-          </ReactFlow>
+          <EdgeContextMenu>
+            <div 
+              onContextMenu={(e) => {
+                // Allow context menu on edges, but prevent on background
+                const target = e.target as HTMLElement
+                if (!target.closest('.react-flow__edge')) {
+                  e.preventDefault()
+                }
+              }}
+            >
+              <ReactFlow
+                nodes={nodesForFlow}
+                edges={edgesForFlow}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                nodeTypes={nodeTypes}
+                proOptions={{ hideAttribution: true }}
+                className="bg-white"
+                style={{ background: "#eeeff3ff" }}
+                panOnDrag={false}
+                elementsSelectable={false}
+                minZoom={1}
+                maxZoom={1}
+                connectionMode={ConnectionMode.Loose}
+                connectionRadius={50}
+                snapToGrid={false}
+                snapGrid={[15, 15]}
+                defaultEdgeOptions={{
+                  type: 'smoothstep',
+                  animated: false,
+                  style: { 
+                    strokeWidth: 2, 
+                    stroke: '#6b7280',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  },
+                  markerEnd: {
+                    type: MarkerType.ArrowClosed,
+                    color: '#6b7280',
+                  },
+                }}
+                onEdgeContextMenu={(event, edge) => {
+                  event.preventDefault()
+                  console.log("[v0] Edge right-clicked:", edge.id)
+                }}
+              >
+                <Controls />
+                <Background gap={16} size={1} />
+              </ReactFlow>
+            </div>
+          </EdgeContextMenu>
 
           {/* Connected System Panel */}
           {selectedNodeId && (
