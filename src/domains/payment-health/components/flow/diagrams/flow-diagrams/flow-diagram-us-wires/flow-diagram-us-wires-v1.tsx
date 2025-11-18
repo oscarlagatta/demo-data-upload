@@ -20,8 +20,8 @@ import {
   ReactFlow,
   ReactFlowProvider,
   useStore,
+  ConnectionMode, // Import ConnectionMode enum
   useReactFlow,
-  ConnectionMode,
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 import { AlertCircle, Loader2, RefreshCw } from 'lucide-react'
@@ -39,7 +39,6 @@ import SplunkTableUsWiresBackend from "@/domains/payment-health/components/table
 import { TransactionDetailsTableAgGrid } from "@/domains/payment-health/components/tables/transaction-details-table-ag-grid/transaction-details-table-ag-grid"
 import CustomNodeUsWires from "@/domains/payment-health/components/flow/nodes/custom-nodes-us-wires/custom-node-us-wires"
 import SectionBackgroundNode from "@/domains/payment-health/components/flow/nodes/expandable-charts/section-background-node"
-import { EdgeContextMenu } from "@/domains/payment-health/components/flow/context-menu/EdgeContextMenu"
 
 const SECTION_IDS = ["bg-origination", "bg-validation", "bg-middleware", "bg-processing"]
 
@@ -165,27 +164,6 @@ const Flow = ({
       action,
     })
   }, [])
-
-  // Handler for deleting edges via context menu
-  const handleDeleteEdge = useCallback(
-    (edgeIdToDelete: string) => {
-      console.log("[v0] Deleting edge:", edgeIdToDelete)
-      
-      setEdges((currentEdges) => 
-        currentEdges.filter((edge) => edge.id !== edgeIdToDelete)
-      )
-      
-      // Clear selection if the deleted edge was part of selected connections
-      if (connectedEdgeIds.has(edgeIdToDelete)) {
-        setConnectedEdgeIds((prev) => {
-          const updated = new Set(prev)
-          updated.delete(edgeIdToDelete)
-          return updated
-        })
-      }
-    },
-    [connectedEdgeIds]
-  )
 
   // Get connected systems names for display
   const getConnectedSystemNames = useCallback(() => {
@@ -324,11 +302,6 @@ const Flow = ({
       const connectedColor = '#3b82f6'
       const dimmedColor = '#d1d5db'
 
-      const sourceNode = nodes.find(n => n.id === edge.source)
-      const targetNode = nodes.find(n => n.id === edge.target)
-      const sourceLabel = sourceNode?.data?.['title'] || edge.source
-      const targetLabel = targetNode?.data?.['title'] || edge.target
-
       return {
         ...edge,
         style: {
@@ -348,15 +321,9 @@ const Flow = ({
           type: MarkerType.ArrowClosed,
           color: isConnected ? connectedColor : isDimmed ? dimmedColor : baseColor,
         },
-        data: {
-          ...edge.data,
-          sourceLabel,
-          targetLabel,
-          onDelete: handleDeleteEdge,
-        },
       }
     })
-  }, [edges, connectedEdgeIds, selectedNodeId, nodes, handleDeleteEdge])
+  }, [edges, connectedEdgeIds, selectedNodeId])
 
   const renderDataPanel = () => {
     if (isLoading) {
@@ -503,72 +470,41 @@ const Flow = ({
               <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
             </Button>
           </div>
-          <div 
-            onContextMenu={(e) => {
-              // Allow context menu on edges, but prevent on background
-              const target = e.target as HTMLElement
-              if (!target.closest('.react-flow__edge')) {
-                e.preventDefault()
-              }
+          <ReactFlow
+            nodes={nodesForFlow}
+            edges={edgesForFlow}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            nodeTypes={nodeTypes}
+            proOptions={{ hideAttribution: true }}
+            className="bg-white"
+            style={{ background: "#eeeff3ff" }}
+            panOnDrag={false}
+            elementsSelectable={false}
+            minZoom={1}
+            maxZoom={1}
+            connectionMode={ConnectionMode.Loose} // Allows connections from any handle
+            connectionRadius={50} // Increased snap radius for easier connections
+            snapToGrid={false}
+            snapGrid={[15, 15]}
+            defaultEdgeOptions={{
+              type: 'smoothstep',
+              animated: false,
+              style: { 
+                strokeWidth: 2, 
+                stroke: '#6b7280',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+              },
+              markerEnd: {
+                type: MarkerType.ArrowClosed,
+                color: '#6b7280',
+              },
             }}
           >
-            <ReactFlow
-              nodes={nodesForFlow}
-              edges={edgesForFlow}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              nodeTypes={nodeTypes}
-              proOptions={{ hideAttribution: true }}
-              className="bg-white"
-              style={{ background: "#eeeff3ff" }}
-              panOnDrag={false}
-              elementsSelectable={false}
-              minZoom={1}
-              maxZoom={1}
-              connectionMode={ConnectionMode.Loose}
-              connectionRadius={50}
-              snapToGrid={false}
-              snapGrid={[15, 15]}
-              defaultEdgeOptions={{
-                type: 'smoothstep',
-                animated: false,
-                style: { 
-                  strokeWidth: 2, 
-                  stroke: '#6b7280',
-                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                },
-                markerEnd: {
-                  type: MarkerType.ArrowClosed,
-                  color: '#6b7280',
-                },
-              }}
-              onEdgeContextMenu={(event, edge) => {
-                event.preventDefault()
-                console.log("[v0] Edge right-clicked:", edge.id)
-                // For now, show toast with edge info and delete option
-                const sourceNode = nodes.find(n => n.id === edge.source)
-                const targetNode = nodes.find(n => n.id === edge.target)
-                const sourceLabel = sourceNode?.data?.['title'] || edge.source
-                const targetLabel = targetNode?.data?.['title'] || edge.target
-                
-                // Simple confirmation for deletion
-                const shouldDelete = window.confirm(
-                  `Remove connection?\n\nFrom: ${sourceLabel}\nTo: ${targetLabel}\n\nClick OK to remove this connection.`
-                )
-                
-                if (shouldDelete) {
-                  handleDeleteEdge(edge.id)
-                  toast.success("Connection removed", {
-                    description: `Removed connection from ${sourceLabel} to ${targetLabel}`,
-                  })
-                }
-              }}
-            >
-              <Controls />
-              <Background gap={16} size={1} />
-            </ReactFlow>
-          </div>
+            <Controls />
+            <Background gap={16} size={1} />
+          </ReactFlow>
 
           {/* Connected System Panel */}
           {selectedNodeId && (
