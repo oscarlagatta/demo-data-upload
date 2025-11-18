@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState, type MouseEvent } from "react"
+import { useCallback, type MouseEvent } from "react"
 import { Trash2, Info, Link2Off } from 'lucide-react'
 import {
   ContextMenu,
@@ -29,8 +29,6 @@ export function EdgeContextMenu({
   onDeleteEdge,
   disabled = false,
 }: EdgeContextMenuProps) {
-  const [isOpen, setIsOpen] = useState(false)
-
   const handleDelete = useCallback(
     (e: MouseEvent) => {
       e.preventDefault()
@@ -44,8 +42,6 @@ export function EdgeContextMenu({
         description: `Removed connection from ${sourceLabel} to ${targetLabel}`,
         icon: <Link2Off className="h-4 w-4" />,
       })
-      
-      setIsOpen(false)
     },
     [edgeId, onDeleteEdge, sourceLabel, targetLabel]
   )
@@ -59,8 +55,6 @@ export function EdgeContextMenu({
         description: `From: ${sourceLabel}\nTo: ${targetLabel}\nID: ${edgeId}`,
         icon: <Info className="h-4 w-4" />,
       })
-      
-      setIsOpen(false)
     },
     [edgeId, sourceLabel, targetLabel]
   )
@@ -70,7 +64,7 @@ export function EdgeContextMenu({
   }
 
   return (
-    <ContextMenu open={isOpen} onOpenChange={setIsOpen}>
+    <ContextMenu>
       <ContextMenuTrigger asChild>
         {children}
       </ContextMenuTrigger>
@@ -89,8 +83,7 @@ export function EdgeContextMenu({
 
         <ContextMenuItem 
           onClick={handleDelete} 
-          variant="destructive"
-          className="gap-2"
+          className="gap-2 text-destructive focus:text-destructive"
         >
           <Trash2 className="h-4 w-4" />
           <span>Remove Connection</span>
