@@ -181,4 +181,33 @@
     animation: edge-pulse 0.4s ease-in-out;
   }
   /* </CHANGE> */
+  
+  /* Enhanced edge styles for delete button visibility */
+  .react-flow__edge:hover {
+    cursor: pointer;
+  }
+  
+  /* Show delete button on edge hover */
+  .react-flow__edge:hover + * .group {
+    opacity: 1 !important;
+  }
+  
+  /* Ensure edge labels have higher z-index */
+  .react-flow__edge-label {
+    z-index: 1000;
+  }
+  
+  /* Smooth transitions for edge interactions */
+  .react-flow__edge .react-flow__edge-path {
+    transition: stroke 0.2s ease, stroke-width 0.2s ease, filter 0.2s ease;
+  }
+  
+  /* Delete button accessibility - show on focus-visible */
+  .react-flow__edge:focus-visible + * .group,
+  .react-flow__edge button:focus-visible {
+    opacity: 1 !important;
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+  /* </CHANGE> */
 }

@@ -40,6 +40,9 @@ import { TransactionDetailsTableAgGrid } from "@/domains/payment-health/componen
 import CustomNodeUsWires from "@/domains/payment-health/components/flow/nodes/custom-nodes-us-wires/custom-node-us-wires"
 import SectionBackgroundNode from "@/domains/payment-health/components/flow/nodes/expandable-charts/section-background-node"
 
+import { DeleteButtonEdge } from "@/domains/payment-health/components/flow/edges/DeleteButtonEdge"
+import { EdgeDeleteDialog } from "@/domains/payment-health/components/flow/dialogs/EdgeDeleteDialog"
+
 const SECTION_IDS = ["bg-origination", "bg-validation", "bg-middleware", "bg-processing"]
 
 const sectionDurations = {
@@ -95,6 +98,14 @@ const Flow = ({
   const isError = !!flowDataError
   const isFetching = isFlowDataLoading
   const isSuccess = !isLoading && !isError && splunkData
+
+  const [edgeToDelete, setEdgeToDelete] = useState<{
+    id: string
+    sourceLabel: string
+    targetLabel: string
+  } | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  // </CHANGE>
 
   const handleRefetch = async () => {
     try {
@@ -164,6 +175,53 @@ const Flow = ({
       action,
     })
   }, [])
+
+  const handleEdgeDelete = useCallback((edgeId: string) => {
+    const edge = edges.find((e) => e.id === edgeId)
+    if (!edge) return
+
+    const sourceNode = nodes.find((n) => n.id === edge.source)
+    const targetNode = nodes.find((n) => n.id === edge.target)
+
+    setEdgeToDelete({
+      id: edgeId,
+      sourceLabel: (sourceNode?.data?.["title"] as string) || "Unknown",
+      targetLabel: (targetNode?.data?.["title"] as string) || "Unknown",
+    })
+  }, [edges, nodes])
+
+  const confirmEdgeDelete = useCallback(async () => {
+    if (!edgeToDelete) return
+
+    setIsDeleting(true)
+    
+    try {
+      // Remove edge from state
+      setEdges((eds) => eds.filter((e) => e.id !== edgeToDelete.id))
+      
+      // Show success toast
+      toast.success("Connection removed", {
+        description: `Disconnected ${edgeToDelete.sourceLabel} from ${edgeToDelete.targetLabel}`,
+      })
+      
+      // TODO: Call API to persist edge deletion
+      // await deleteEdgeConnection(edgeToDelete.id)
+      
+    } catch (error) {
+      console.error("Failed to delete edge:", error)
+      toast.error("Failed to remove connection", {
+        description: "Please try again later",
+      })
+    } finally {
+      setIsDeleting(false)
+      setEdgeToDelete(null)
+    }
+  }, [edgeToDelete])
+
+  const cancelEdgeDelete = useCallback(() => {
+    setEdgeToDelete(null)
+  }, [])
+  // </CHANGE>
 
   // Get connected systems names for display
   const getConnectedSystemNames = useCallback(() => {
@@ -304,6 +362,12 @@ const Flow = ({
 
       return {
         ...edge,
+        type: 'deleteButton',
+        data: {
+          ...edge.data,
+          onDelete: handleEdgeDelete,
+        },
+        // </CHANGE>
         style: {
           ...edge.style,
           strokeWidth: isConnected ? connectedStrokeWidth : baseStrokeWidth,
@@ -314,8 +378,7 @@ const Flow = ({
         },
         className: `react-flow__edge ${isConnected ? "edge-connected" : ""} ${isDimmed ? "edge-dimmed" : ""}`,
         animated: isConnected,
-        // Add interactivity properties for better hover detection
-        interactionWidth: 20, // Wider invisible interaction area
+        interactionWidth: 20,
         markerEnd: {
           ...edge.markerEnd,
           type: MarkerType.ArrowClosed,
@@ -323,7 +386,7 @@ const Flow = ({
         },
       }
     })
-  }, [edges, connectedEdgeIds, selectedNodeId])
+  }, [edges, connectedEdgeIds, selectedNodeId, handleEdgeDelete])
 
   const renderDataPanel = () => {
     if (isLoading) {
@@ -477,6 +540,10 @@ const Flow = ({
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             nodeTypes={nodeTypes}
+            edgeTypes={{
+              deleteButton: DeleteButtonEdge,
+            }}
+            // </CHANGE>
             proOptions={{ hideAttribution: true }}
             className="bg-white"
             style={{ background: "#eeeff3ff" }}
@@ -484,8 +551,8 @@ const Flow = ({
             elementsSelectable={false}
             minZoom={1}
             maxZoom={1}
-            connectionMode={ConnectionMode.Loose} // Allows connections from any handle
-            connectionRadius={50} // Increased snap radius for easier connections
+            connectionMode={ConnectionMode.Loose}
+            connectionRadius={50}
             snapToGrid={false}
             snapGrid={[15, 15]}
             defaultEdgeOptions={{
@@ -551,6 +618,16 @@ const Flow = ({
               </div>
             </Draggable>
           )}
+
+          <EdgeDeleteDialog
+            isOpen={!!edgeToDelete}
+            onClose={cancelEdgeDelete}
+            onConfirm={confirmEdgeDelete}
+            sourceLabel={edgeToDelete?.sourceLabel}
+            targetLabel={edgeToDelete?.targetLabel}
+            isLoading={isDeleting}
+          />
+          {/* </CHANGE> */}
         </>
       )}
     </div>
