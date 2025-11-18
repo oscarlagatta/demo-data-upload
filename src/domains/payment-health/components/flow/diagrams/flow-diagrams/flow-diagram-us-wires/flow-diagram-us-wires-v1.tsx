@@ -21,6 +21,7 @@ import {
   ReactFlowProvider,
   useStore,
   useReactFlow,
+  ConnectionMode,
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 import { AlertCircle, Loader2, RefreshCw } from 'lucide-react'
@@ -502,57 +503,72 @@ const Flow = ({
               <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
             </Button>
           </div>
-          <EdgeContextMenu>
-            <div 
-              onContextMenu={(e) => {
-                // Allow context menu on edges, but prevent on background
-                const target = e.target as HTMLElement
-                if (!target.closest('.react-flow__edge')) {
-                  e.preventDefault()
+          <div 
+            onContextMenu={(e) => {
+              // Allow context menu on edges, but prevent on background
+              const target = e.target as HTMLElement
+              if (!target.closest('.react-flow__edge')) {
+                e.preventDefault()
+              }
+            }}
+          >
+            <ReactFlow
+              nodes={nodesForFlow}
+              edges={edgesForFlow}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              nodeTypes={nodeTypes}
+              proOptions={{ hideAttribution: true }}
+              className="bg-white"
+              style={{ background: "#eeeff3ff" }}
+              panOnDrag={false}
+              elementsSelectable={false}
+              minZoom={1}
+              maxZoom={1}
+              connectionMode={ConnectionMode.Loose}
+              connectionRadius={50}
+              snapToGrid={false}
+              snapGrid={[15, 15]}
+              defaultEdgeOptions={{
+                type: 'smoothstep',
+                animated: false,
+                style: { 
+                  strokeWidth: 2, 
+                  stroke: '#6b7280',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                },
+                markerEnd: {
+                  type: MarkerType.ArrowClosed,
+                  color: '#6b7280',
+                },
+              }}
+              onEdgeContextMenu={(event, edge) => {
+                event.preventDefault()
+                console.log("[v0] Edge right-clicked:", edge.id)
+                // For now, show toast with edge info and delete option
+                const sourceNode = nodes.find(n => n.id === edge.source)
+                const targetNode = nodes.find(n => n.id === edge.target)
+                const sourceLabel = sourceNode?.data?.title || edge.source
+                const targetLabel = targetNode?.data?.title || edge.target
+                
+                // Simple confirmation for deletion
+                const shouldDelete = window.confirm(
+                  `Remove connection?\n\nFrom: ${sourceLabel}\nTo: ${targetLabel}\n\nClick OK to remove this connection.`
+                )
+                
+                if (shouldDelete) {
+                  handleDeleteEdge(edge.id)
+                  toast.success("Connection removed", {
+                    description: `Removed connection from ${sourceLabel} to ${targetLabel}`,
+                  })
                 }
               }}
             >
-              <ReactFlow
-                nodes={nodesForFlow}
-                edges={edgesForFlow}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
-                nodeTypes={nodeTypes}
-                proOptions={{ hideAttribution: true }}
-                className="bg-white"
-                style={{ background: "#eeeff3ff" }}
-                panOnDrag={false}
-                elementsSelectable={false}
-                minZoom={1}
-                maxZoom={1}
-                connectionMode={ConnectionMode.Loose}
-                connectionRadius={50}
-                snapToGrid={false}
-                snapGrid={[15, 15]}
-                defaultEdgeOptions={{
-                  type: 'smoothstep',
-                  animated: false,
-                  style: { 
-                    strokeWidth: 2, 
-                    stroke: '#6b7280',
-                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                  },
-                  markerEnd: {
-                    type: MarkerType.ArrowClosed,
-                    color: '#6b7280',
-                  },
-                }}
-                onEdgeContextMenu={(event, edge) => {
-                  event.preventDefault()
-                  console.log("[v0] Edge right-clicked:", edge.id)
-                }}
-              >
-                <Controls />
-                <Background gap={16} size={1} />
-              </ReactFlow>
-            </div>
-          </EdgeContextMenu>
+              <Controls />
+              <Background gap={16} size={1} />
+            </ReactFlow>
+          </div>
 
           {/* Connected System Panel */}
           {selectedNodeId && (
