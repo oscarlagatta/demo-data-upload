@@ -4,13 +4,16 @@
 
 This documentation provides a comprehensive explanation of the `useFlowDataBackEnd` hook and the `transformEnhancedApiData` function, which work together to process and transform payment flow data for visualization in React Flow diagrams.
 
+**Last Updated**: Revised to reflect new node properties including styling classes, positioning, and enhanced metrics.
+
 ## Table of Contents
 
 1. [useFlowDataBackEnd Hook](#useflowdatabackend-hook)
 2. [transformEnhancedApiData Function](#transformenhancedapidata-function)
 3. [Data Flow Architecture](#data-flow-architecture)
 4. [API Data Structure](#api-data-structure)
-5. [Component Integration](#component-integration)
+5. [New Node Properties](#new-node-properties)
+6. [Component Integration](#component-integration)
 
 ---
 
@@ -215,10 +218,12 @@ const transformedNodes: AppNode[] = apiData.nodes
     if (!sectionConfig) return null
 
     const positionIndex = sectionCounters[parentId]++
-    const position = sectionConfig.positions[positionIndex] || {
-      x: sectionConfig.baseX,
-      y: 100 + positionIndex * 120,
-    }
+    const position = apiNode.xPosition !== undefined && apiNode.yPosition !== undefined
+      ? { x: apiNode.xPosition, y: apiNode.yPosition }
+      : sectionConfig.positions[positionIndex] || {
+          x: sectionConfig.baseX,
+          y: 100 + positionIndex * 120,
+        }
 
     return {
       id: apiNode.id,
@@ -229,13 +234,21 @@ const transformedNodes: AppNode[] = apiData.nodes
         subtext: `AIT ${apiNode.id}`,
         systemHealth: apiNode.systemHealth,
         isTrafficFlowing: apiNode.isTrafficFlowing,
-        currentThruputTime30: apiNode.currentThruputTime30,
-        averageThruputTime30: apiNode.averageThruputTime30,
+        currentThroughputTime: apiNode.currentThroughputTime ?? apiNode.currentThruputTime30,
+        averageThroughputTime: apiNode.averageThroughputTime30 ?? apiNode.averageThruputTime30,
         splunkDatas: apiNode.splunkDatas,
         step: apiNode.step,
+        descriptions: apiNode.descriptions,
+        flowClass: apiNode.flowClass,
+        trendClass: apiNode.trendClass,
+        balancedClass: apiNode.balancedClass,
       },
       parentId: parentId,
       extent: "parent" as const,
+      style: {
+        height: apiNode.height,
+        width: apiNode.width,
+      },
     }
   })
   .filter((n): n is AppNode => n !== null)
@@ -341,16 +354,37 @@ React Flow Data → Flow Diagram Components → Visual Representation
 
 ### Core Data Elements
 
-#### Node Structure
+#### Node Structure (Updated)
 \`\`\`typescript
 interface ApiNode {
+  // Identifiers
   id: string                    // Unique identifier (e.g., "11554")
   label: string                 // Display name (e.g., "SAG")
   category?: string             // Section category (e.g., "Origination")
+  
+  // Performance Metrics
   systemHealth?: string         // Health status ("Healthy", "Unknown", etc.)
   isTrafficFlowing?: boolean    // Traffic flow indicator
-  currentThruputTime30?: number // Current throughput time
-  averageThruputTime30?: number // Average throughput time
+  currentThroughputTime?: number // Current throughput time (standardized)
+  currentThruputTime30?: number  // Legacy: Current throughput time
+  averageThroughputTime30?: number // Average throughput time (standardized)
+  averageThruputTime30?: number  // Legacy: Average throughput time
+  
+  // Styling Properties (NEW)
+  flowClass?: string            // CSS class for flow state (e.g., "bg-gray-400")
+  trendClass?: string           // CSS class for trend indication
+  balancedClass?: string | null // CSS class for balanced state
+  
+  // Content (NEW)
+  descriptions?: string         // Detailed node description
+  
+  // Positioning & Dimensions (NEW)
+  height?: number              // Node height in pixels (e.g., 90)
+  width?: number               // Node width in pixels (e.g., 180)
+  xPosition?: number           // Absolute X position (e.g., 300)
+  yPosition?: number           // Absolute Y position (e.g., 120)
+  
+  // Additional Data
   splunkDatas?: any[]          // Detailed Splunk metrics
   step?: number                // Processing step number
 }
@@ -384,47 +418,140 @@ interface LayoutConfig {
 
 ---
 
+## New Node Properties
+
+### Styling Classes
+
+The updated backend structure includes three CSS class properties for dynamic styling:
+
+#### 1. `flowClass`
+- **Purpose**: Indicates the current traffic flow state
+- **Values**: CSS class names (e.g., `"bg-gray-400"`, `"bg-green-500"`, `"bg-red-500"`)
+- **Usage**: Applied to node background to show traffic status
+- **Example**: `"bg-gray-400"` for no traffic, `"bg-green-500"` for healthy flow
+
+#### 2. `trendClass`
+- **Purpose**: Shows performance trend direction
+- **Values**: CSS class names (e.g., `"bg-gray-400"`, `"bg-blue-500"`, `"bg-orange-500"`)
+- **Usage**: Applied to trend indicators or borders
+- **Example**: `"bg-blue-500"` for improving trend, `"bg-orange-500"` for degrading
+
+#### 3. `balancedClass`
+- **Purpose**: Indicates load balancing state
+- **Values**: CSS class names or `null` if not applicable
+- **Usage**: Applied when system shows balanced/unbalanced load distribution
+- **Example**: `"bg-yellow-500"` for unbalanced, `null` for balanced or N/A
+
+### Positioning Properties
+
+#### Absolute Positioning
+The backend now supports explicit positioning:
+
+- **`xPosition`**: Absolute X coordinate within the flow canvas
+- **`yPosition`**: Absolute Y coordinate within the flow canvas
+
+**Priority**: If both `xPosition` and `yPosition` are provided, they override the calculated positions from `sectionPositions`.
+
+**Fallback**: If not provided, the system uses section-based positioning with automatic spacing.
+
+### Dimension Properties
+
+Nodes can now specify custom dimensions:
+
+- **`height`**: Node height in pixels (default: determined by content)
+- **`width`**: Node width in pixels (default: determined by content)
+
+**Usage**: Applied as inline styles to React Flow nodes for consistent sizing across the diagram.
+
+### Descriptive Content
+
+#### `descriptions`
+- **Purpose**: Provides detailed information about the node's functionality
+- **Format**: Plain text string
+- **Usage**: Can be displayed in tooltips, expanded views, or node details panels
+- **Example**: `"Handles origination requests\n- Receives inbound\n- Sends"`
+
+### Data Migration & Compatibility
+
+The transformation function maintains backward compatibility:
+
+1. **Throughput Time Normalization**:
+   \`\`\`typescript
+   currentThroughputTime = apiNode.currentThroughputTime ?? apiNode.currentThruputTime30
+   averageThroughputTime = apiNode.averageThroughputTime30 ?? apiNode.averageThruputTime30
+   \`\`\`
+   Both old and new property names are supported.
+
+2. **Position Calculation**:
+   \`\`\`typescript
+   position = apiNode.xPosition !== undefined 
+     ? { x: apiNode.xPosition, y: apiNode.yPosition }
+     : calculatedPosition
+   \`\`\`
+   Seamlessly switches between absolute and calculated positioning.
+
+3. **Optional Properties**:
+   All new properties are optional, ensuring existing data structures remain valid.
+
+---
+
 ## Component Integration
 
-### Usage in Flow Diagram Components
-
-The hook is used in flow diagram components like this:
+### Usage with New Properties
 
 \`\`\`typescript
-// In flow-diagram-us-wires.tsx
-const {
-  nodes,
-  edges,
-  isLoading,
-  isError,
-  backgroundNodes,
-  sectionTimings,
-  totalProcessingTime,
-  splunkData
-} = useFlowDataBackEnd()
-
-// Nodes and edges are passed to React Flow
-<ReactFlow
-  nodes={nodes}
-  edges={edges}
-  // ... other props
-/>
+// In custom-node-us-wires.tsx
+export function CustomNodeUsWires({ data }: NodeProps<NodeData>) {
+  return (
+    <div 
+      className={cn(
+        "node-container",
+        data.flowClass,        // Apply dynamic flow state styling
+        data.trendClass,       // Apply trend indication styling
+        data.balancedClass     // Apply balance state styling
+      )}
+      style={{
+        height: data.height,    // Apply custom dimensions
+        width: data.width
+      }}
+    >
+      <div className="node-header">
+        <h3>{data.title}</h3>
+        <span>{data.subtext}</span>
+      </div>
+      
+      {data.descriptions && (
+        <div className="node-description">
+          {data.descriptions}   // Display detailed description
+        </div>
+      )}
+      
+      <div className="node-metrics">
+        {data.currentThroughputTime !== undefined && (
+          <span>Current: {data.currentThroughputTime}ms</span>
+        )}
+        {data.averageThroughputTime !== undefined && (
+          <span>Average: {data.averageThroughputTime}ms</span>
+        )}
+      </div>
+    </div>
+  )
+}
 \`\`\`
 
-### Key Benefits
+### Validation & Error Handling
 
-1. **Separation of Concerns**: Data fetching, transformation, and visualization are cleanly separated
-2. **Type Safety**: Strong TypeScript typing throughout the pipeline
-3. **Error Handling**: Graceful handling of missing or malformed data
-4. **Performance**: Efficient data transformation with minimal re-computation
-5. **Maintainability**: Clear data flow and well-documented transformations
+The transformation function includes comprehensive validation:
 
-### Error Handling
+1. **Category Validation**: Warns if node category doesn't map to a parent section
+2. **Position Fallback**: Automatically calculates positions if not provided
+3. **Property Normalization**: Handles both old and new property names
+4. **Type Safety**: TypeScript ensures all properties match expected types
 
-The system includes robust error handling:
-- **Missing Categories**: Logs warnings and filters out unmappable nodes
-- **Invalid Positions**: Falls back to calculated positions
-- **API Failures**: Returns empty data structures to prevent crashes
-- **Type Safety**: TypeScript ensures data structure integrity
+### Performance Considerations
 
-This architecture ensures reliable operation even with incomplete or malformed API data while providing comprehensive debugging information through console warnings.
+- **Edge Deduplication**: Prevents duplicate connections with bidirectional check
+- **Position Caching**: Section counters minimize recalculation
+- **Selective Styling**: Only applies custom dimensions when provided
+
+---

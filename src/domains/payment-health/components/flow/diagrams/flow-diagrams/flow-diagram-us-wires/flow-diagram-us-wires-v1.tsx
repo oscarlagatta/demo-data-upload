@@ -20,9 +20,10 @@ import {
   ReactFlow,
   ReactFlowProvider,
   useStore,
+  ConnectionMode, // Import ConnectionMode enum
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
-import { AlertCircle, Loader2, RefreshCw } from "lucide-react"
+import { AlertCircle, Loader2, RefreshCw } from 'lucide-react'
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -365,8 +366,12 @@ const Flow = ({
           strokeWidth: isConnected ? 3 : 2,
           stroke: isConnected ? "#1d4ed8" : isDimmed ? "#d1d5db" : "#6b7280",
           opacity: isDimmed ? 0.3 : 1,
+          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
         },
+        className: `${isConnected ? "edge-connected" : ""} ${isDimmed ? "edge-dimmed" : ""}`,
         animated: isConnected,
+        // Add interactivity properties for better hover detection
+        interactionWidth: 20, // Wider invisible interaction area
       }
     })
   }, [edges, connectedEdgeIds, selectedNodeId])
@@ -530,6 +535,15 @@ const Flow = ({
             elementsSelectable={false}
             minZoom={1}
             maxZoom={1}
+            connectionMode={ConnectionMode.Loose} // Allows connections from any handle
+            connectionRadius={50} // Increased snap radius for easier connections
+            snapToGrid={false}
+            snapGrid={[15, 15]}
+            defaultEdgeOptions={{
+              type: 'smoothstep',
+              animated: false,
+              style: { strokeWidth: 2, stroke: '#6b7280' },
+            }}
           >
             <Controls />
             <Background gap={16} size={1} />

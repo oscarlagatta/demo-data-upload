@@ -7,7 +7,7 @@ interface NodeHandlesProps {
 
 export function NodeHandles({
   positions = ["left", "right", "top", "bottom"],
-  className = "h-2 w-2 !bg-gray-400",
+  className = "h-3 w-3 !bg-blue-500 !border-2 !border-white hover:!bg-blue-600 hover:!scale-125 transition-all",
 }: NodeHandlesProps) {
   const positionMap = {
     left: Position.Left,
@@ -16,12 +16,65 @@ export function NodeHandles({
     bottom: Position.Bottom,
   }
 
+  const commonHandleProps = {
+    isConnectable: true,
+    className: `${className} !z-50`,
+  }
+
   return (
     <>
-      {positions.includes("left") && <Handle type="target" position={positionMap.left} className={className} />}
-      {positions.includes("right") && <Handle type="source" position={positionMap.right} className={className} />}
-      {positions.includes("top") && <Handle type="source" position={positionMap.top} className={className} />}
-      {positions.includes("bottom") && <Handle type="source" position={positionMap.bottom} className={className} />}
+      {positions.includes("left") && (
+        <Handle 
+          {...commonHandleProps}
+          type="target" 
+          position={positionMap.left} 
+          id="left"
+          style={{ 
+            left: -6, // Extended handle outside node boundary for better visibility
+            top: '50%',
+            transform: 'translateY(-50%)',
+          }}
+        />
+      )}
+      {positions.includes("right") && (
+        <Handle 
+          {...commonHandleProps}
+          type="source" 
+          position={positionMap.right} 
+          id="right"
+          style={{ 
+            right: -6, // Extended handle outside node boundary
+            top: '50%',
+            transform: 'translateY(-50%)',
+          }}
+        />
+      )}
+      {positions.includes("top") && (
+        <Handle 
+          {...commonHandleProps}
+          type="target" // Changed to target to accept incoming connections
+          position={positionMap.top} 
+          id="top"
+          style={{ 
+            top: -6, // Extended handle outside node boundary
+            left: '50%',
+            transform: 'translateX(-50%)',
+          }}
+        />
+      )}
+      {positions.includes("bottom") && (
+        <Handle 
+          {...commonHandleProps}
+          type="source" 
+          position={positionMap.bottom} 
+          id="bottom"
+          style={{ 
+            bottom: -6, // Extended handle outside node boundary
+            left: '50%',
+            transform: 'translateX(-50%)',
+          }}
+        />
+      )}
     </>
   )
 }

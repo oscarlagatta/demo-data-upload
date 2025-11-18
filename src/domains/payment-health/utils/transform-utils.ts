@@ -84,8 +84,18 @@ interface ApiNode {
   category?: string
   systemHealth?: string
   isTrafficFlowing?: boolean
+  currentThroughputTime?: number
   currentThruputTime30?: number
+  averageThroughputTime30?: number
   averageThruputTime30?: number
+  flowClass?: string
+  trendClass?: string
+  balancedClass?: string | null
+  descriptions?: string
+  height?: number
+  width?: number
+  xPosition?: number
+  yPosition?: number
   splunkDatas?: any[]
   step?: number
 }
@@ -95,6 +105,16 @@ interface SystemConnection {
   target: string | string[]
 }
 
+/**
+ * Transforms enhanced API data into React Flow compatible format
+ * Handles comprehensive node properties including styling, positioning, and performance metrics
+ * 
+ * @param apiData - Raw API data containing nodes and system connections
+ * @param backgroundNodes - Pre-created background section nodes
+ * @param classToParentId - Mapping of node categories to parent section IDs
+ * @param sectionPositions - Position configuration for nodes within sections
+ * @returns Object containing transformed nodes and edges for React Flow
+ */
 export function transformEnhancedApiData(
   apiData: ApiData,
   backgroundNodes: AppNode[],
@@ -125,10 +145,16 @@ export function transformEnhancedApiData(
       if (!sectionConfig) return null
 
       const positionIndex = sectionCounters[parentId]++
-      const position = sectionConfig.positions[positionIndex] || {
-        x: sectionConfig.baseX,
-        y: 100 + positionIndex * 120,
-      }
+      
+      const position = apiNode.xPosition !== undefined && apiNode.yPosition !== undefined
+        ? { x: apiNode.xPosition, y: apiNode.yPosition }
+        : sectionConfig.positions[positionIndex] || {
+            x: sectionConfig.baseX,
+            y: 100 + positionIndex * 120,
+          }
+
+      const currentThroughputTime = apiNode.currentThroughputTime ?? apiNode.currentThruputTime30
+      const averageThroughputTime = apiNode.averageThroughputTime30 ?? apiNode.averageThruputTime30
 
       return {
         id: apiNode.id,
@@ -137,15 +163,29 @@ export function transformEnhancedApiData(
         data: {
           title: apiNode.label,
           subtext: `AIT ${apiNode.id}`,
+          flowClass: apiNode.flowClass,
+          trendClass: apiNode.trendClass,
+          balancedClass: apiNode.balancedClass,
           systemHealth: apiNode.systemHealth,
           isTrafficFlowing: apiNode.isTrafficFlowing,
-          currentThruputTime30: apiNode.currentThruputTime30,
-          averageThruputTime30: apiNode.averageThruputTime30,
+          currentThroughputTime,
+          averageThroughputTime,
+          currentThruputTime30: currentThroughputTime,
+          averageThruputTime30: averageThroughputTime,
+          descriptions: apiNode.descriptions,
+          height: apiNode.height,
+          width: apiNode.width,
           splunkDatas: apiNode.splunkDatas,
           step: apiNode.step,
         },
         parentId: parentId,
         extent: "parent" as const,
+        style: apiNode.width || apiNode.height 
+          ? {
+              width: apiNode.width,
+              height: apiNode.height,
+            }
+          : undefined,
       }
     })
     .filter((n): n is AppNode => n !== null)
@@ -159,7 +199,6 @@ export function transformEnhancedApiData(
           const edgeId = `${source}-${t}`
           const reverseEdgeId = `${t}-${source}`
 
-          // Skip if reverse edge already exists
           if (edgeSet.has(reverseEdgeId)) {
             return null
           }
@@ -179,7 +218,6 @@ export function transformEnhancedApiData(
       const edgeId = `${source}-${target}`
       const reverseEdgeId = `${target}-${source}`
 
-      // Skip if reverse edge already exists
       if (edgeSet.has(reverseEdgeId)) {
         return []
       }

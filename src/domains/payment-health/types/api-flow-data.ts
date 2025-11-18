@@ -18,9 +18,18 @@ export interface ApiNode {
   label: string
   category: string
   isTrafficFlowing: boolean
-  currentThruputTime30: number
-  averageThruputTime30: number
+  flowClass?: string
+  trendClass?: string
+  balancedClass?: string | null
+  currentThroughputTime?: number
+  currentThruputTime30?: number // Keep for backward compatibility
+  averageThroughputTime30?: number
   systemHealth: string
+  height?: number
+  width?: number
+  xPosition?: number
+  yPosition?: number
+  descriptions?: string
   splunkDatas: SplunkData[]
   step: number
 }
