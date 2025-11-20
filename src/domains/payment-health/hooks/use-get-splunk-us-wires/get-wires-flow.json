@@ -2,6 +2,7 @@
   "averageThruputTime30": 63.68,
   "nodes": [
     {
+      "nodeId": 1,
       "id": "11554",
       "label": "SAG",
       "category": "Origination",
@@ -23,6 +24,7 @@
       "step": 1
     },
     {
+      "nodeId": 2,
       "id": "41107",
       "label": "CPMobile",
       "category": "Origination",
@@ -59,6 +61,7 @@
       "step": 1
     },
     {
+      "nodeId": 3,
       "id": "48581",
       "label": "Loan IQ",
       "category": "Origination",
@@ -123,6 +126,7 @@
       "step": 1
     },
     {
+      "nodeId": 4,
       "id": "54071",
       "label": "DTS_B2B1",
       "category": "Origination",
@@ -173,6 +177,7 @@
       "step": 1
     },
     {
+      "nodeId": 5,
       "id": "71800",
       "label": "APIGW",
       "category": "Origination",
@@ -209,6 +214,7 @@
       "step": 1
     },
     {
+      "nodeId": 6,
       "id": "512",
       "label": "SCP",
       "category": "Payment Validation and Routing",
@@ -273,6 +279,7 @@
       "step": 1
     },
     {
+      "nodeId": 7,
       "id": "834",
       "label": "ECS",
       "category": "Payment Validation and Routing",
@@ -309,6 +316,7 @@
       "step": 2
     },
     {
+      "nodeId": 8,
       "id": "15227",
       "label": "FRP US",
       "category": "Payment Validation and Routing",
@@ -359,6 +367,7 @@
       "step": 2
     },
     {
+      "nodeId": 9,
       "id": "28960",
       "label": "CPO-PAY",
       "category": "Payment Validation and Routing",
@@ -507,6 +516,7 @@
       "step": 2
     },
     {
+      "nodeId": 10,
       "id": "31427",
       "label": "PSH",
       "category": "Payment Validation and Routing",
@@ -627,6 +637,7 @@
       "step": 2
     },
     {
+      "nodeId": 11,
       "id": "70199",
       "label": "GPO",
       "category": "Payment Validation and Routing",
@@ -691,6 +702,7 @@
       "step": 2
     },
     {
+      "nodeId": 12,
       "id": "4679",
       "label": "mRP",
       "category": "Middleware",
@@ -783,6 +795,7 @@
       "step": 3
     },
     {
+      "nodeId": 13,
       "id": "60745",
       "label": "RPI",
       "category": "Middleware",
@@ -847,6 +860,7 @@
       "step": 3
     },
     {
+      "nodeId": 14,
       "id": "515",
       "label": "GBSAPS",
       "category": "Payment Processing, Sanctions & Investigation",
@@ -897,6 +911,7 @@
       "step": 4
     },
     {
+      "nodeId": 15,
       "id": "1901",
       "label": "WTX",
       "category": "Payment Processing, Sanctions & Investigation",
@@ -1129,6 +1144,7 @@
       "step": 4
     },
     {
+      "nodeId": 16,
       "id": "43929",
       "label": "GFD",
       "category": "Payment Processing, Sanctions & Investigation",
@@ -1150,6 +1166,7 @@
       "step": 4
     },
     {
+      "nodeId": 17,
       "id": "46951",
       "label": "ETS US",
       "category": "Payment Processing, Sanctions & Investigation",
@@ -1186,6 +1203,7 @@
       "step": 4
     },
     {
+      "nodeId": 18,
       "id": "62686",
       "label": "GTMS",
       "category": "Payment Processing, Sanctions & Investigation",
@@ -1207,6 +1225,7 @@
       "step": 4
     },
     {
+      "nodeId": 19,
       "id": "74014",
       "label": "RTPF",
       "category": "Payment Processing, Sanctions & Investigation",
@@ -1255,24 +1274,29 @@
     }
   ],
   "systemConnections": [
-    { "id": "SAG", "source": "11554", "target": ["512"] },
-    { "id": "CPMobile", "source": "41107", "target": ["28960"] },
-    { "id": "Loan IQ", "source": "48581", "target": ["4679"] },
-    { "id": "DTS_B2BT", "source": "54071", "target": ["28960", "834"] },
-    { "id": "APIGW", "source": "71800", "target": ["28960"] },
-    { "id": "SAA", "source": "512", "target": ["11554", "74014"] },
-    { "id": "ECS", "source": "834", "target": ["54071", "15227", "4679"] },
-    { "id": "FRP US", "source": "15227", "target": ["28960", "834"] },
-    { "id": "CPO-PAY", "source": "28960", "target": ["41107", "54071", "31427", "4679"] },
-    { "id": "PSH", "source": "31427", "target": ["515", "1901"] },
-    { "id": "RP", "source": "4679", "target": ["48581", "31427", "834", "515", "46951", "43929", "70199"] },
-    { "id": "RPI", "source": "60745", "target": ["70199", "1901"] },
-    { "id": "GBSAPS", "source": "515", "target": ["70199", "4679"] },
-    { "id": "WTX", "source": "1901", "target": ["60745", "4679", "74014"] },
-    { "id": "GFD", "source": "43929", "target": ["28960", "4679"] },
-    { "id": "ETS US", "source": "46951", "target": ["4679"] },
-    { "id": "GTMS", "source": "62686", "target": ["4679"] },
-    { "id": "RTPF", "source": "74014", "target": ["512", "70199", "1901"] }
+    { "systemId": 1, "id": "SAG", "source": "11554", "target": ["512"] },
+    { "systemId": 2, "id": "CPMobile", "source": "41107", "target": ["28960"] },
+    { "systemId": 3, "id": "Loan IQ", "source": "48581", "target": ["4679"] },
+    { "systemId": 4, "id": "DTS_B2BT", "source": "54071", "target": ["28960", "834"] },
+    { "systemId": 5, "id": "APIGW", "source": "71800", "target": ["28960"] },
+    { "systemId": 6, "id": "SAA", "source": "512", "target": ["11554", "74014"] },
+    { "systemId": 7, "id": "ECS", "source": "834", "target": ["54071", "15227", "4679"] },
+    { "systemId": 8, "id": "FRP US", "source": "15227", "target": ["28960", "834"] },
+    { "systemId": 9, "id": "CPO-PAY", "source": "28960", "target": ["41107", "54071", "31427", "4679"] },
+    { "systemId": 10, "id": "PSH", "source": "31427", "target": ["515", "1901"] },
+    {
+      "systemId": 12,
+      "id": "RP",
+      "source": "4679",
+      "target": ["48581", "31427", "834", "515", "46951", "43929", "70199"]
+    },
+    { "systemId": 13, "id": "RPI", "source": "60745", "target": ["70199", "1901"] },
+    { "systemId": 14, "id": "GBSAPS", "source": "515", "target": ["70199", "4679"] },
+    { "systemId": 15, "id": "WTX", "source": "1901", "target": ["60745", "4679", "74014"] },
+    { "systemId": 16, "id": "GFD", "source": "43929", "target": ["28960", "4679"] },
+    { "systemId": 17, "id": "ETS US", "source": "46951", "target": ["4679"] },
+    { "systemId": 18, "id": "GTMS", "source": "62686", "target": ["4679"] },
+    { "systemId": 19, "id": "RTPF", "source": "74014", "target": ["512", "70199", "1901"] }
   ],
   "layOutConfig": [
     {
@@ -1337,11 +1361,7 @@
         "sections": {
           "bg-middleware": {
             "baseX": 750,
-            "positions": [
-              { "x": 750, "y": 0 },
-              { "x": 750, "y": 240 },
-              { "x": 750, "y": 480 }
-            ]
+            "positions": [{ "x": 750, "y": 0 }, { "x": 750, "y": 240 }, { "x": 750, "y": 480 }]
           }
         }
       }

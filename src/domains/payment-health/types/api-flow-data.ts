@@ -18,6 +18,7 @@ export interface ApiNode {
   label: string
   category: string
   isTrafficFlowing: boolean
+  nodeId?: number
   flowClass?: string
   trendClass?: string
   balancedClass?: string | null
@@ -38,6 +39,7 @@ export interface SystemConnection {
   id: string
   source: string
   target: string | string[]
+  systemId?: number
 }
 
 export interface ProcessingSection {

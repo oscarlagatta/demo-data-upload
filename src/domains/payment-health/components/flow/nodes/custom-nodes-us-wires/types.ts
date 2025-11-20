@@ -8,6 +8,7 @@ export type UIMode = "default" | "loading" | "results"
 export type CustomNodeData = {
   title: string
   subtext: string
+  nodeId?: number // Added nodeId property to node data for frontend access
   isSelected?: boolean
   isConnected?: boolean
   isDimmed?: boolean

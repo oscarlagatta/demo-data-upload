@@ -82,6 +82,7 @@ interface ApiNode {
   id: string
   label: string
   category?: string
+  nodeId?: number
   systemHealth?: string
   isTrafficFlowing?: boolean
   currentThroughputTime?: number
@@ -103,12 +104,14 @@ interface ApiNode {
 interface SystemConnection {
   source: string
   target: string | string[]
+  systemId?: number
 }
 
 /**
  * Transforms enhanced API data into React Flow compatible format
  * Handles comprehensive node properties including styling, positioning, and performance metrics
- * 
+ * Now includes nodeId for nodes and systemId for connections
+ *
  * @param apiData - Raw API data containing nodes and system connections
  * @param backgroundNodes - Pre-created background section nodes
  * @param classToParentId - Mapping of node categories to parent section IDs
@@ -145,13 +148,14 @@ export function transformEnhancedApiData(
       if (!sectionConfig) return null
 
       const positionIndex = sectionCounters[parentId]++
-      
-      const position = apiNode.xPosition !== undefined && apiNode.yPosition !== undefined
-        ? { x: apiNode.xPosition, y: apiNode.yPosition }
-        : sectionConfig.positions[positionIndex] || {
-            x: sectionConfig.baseX,
-            y: 100 + positionIndex * 120,
-          }
+
+      const position =
+        apiNode.xPosition !== undefined && apiNode.yPosition !== undefined
+          ? { x: apiNode.xPosition, y: apiNode.yPosition }
+          : sectionConfig.positions[positionIndex] || {
+              x: sectionConfig.baseX,
+              y: 100 + positionIndex * 120,
+            }
 
       const currentThroughputTime = apiNode.currentThroughputTime ?? apiNode.currentThruputTime30
       const averageThroughputTime = apiNode.averageThroughputTime30 ?? apiNode.averageThruputTime30
@@ -163,6 +167,7 @@ export function transformEnhancedApiData(
         data: {
           title: apiNode.label,
           subtext: `AIT ${apiNode.id}`,
+          nodeId: apiNode.nodeId,
           flowClass: apiNode.flowClass,
           trendClass: apiNode.trendClass,
           balancedClass: apiNode.balancedClass,
@@ -180,19 +185,20 @@ export function transformEnhancedApiData(
         },
         parentId: parentId,
         extent: "parent" as const,
-        style: apiNode.width || apiNode.height 
-          ? {
-              width: apiNode.width,
-              height: apiNode.height,
-            }
-          : undefined,
+        style:
+          apiNode.width || apiNode.height
+            ? {
+                width: apiNode.width,
+                height: apiNode.height,
+              }
+            : undefined,
       }
     })
     .filter((n): n is AppNode => n !== null)
 
   const edgeSet = new Set<string>()
   const transformedEdges = apiData.systemConnections.flatMap((connection: SystemConnection) => {
-    const { source, target } = connection
+    const { source, target, systemId } = connection
     if (Array.isArray(target)) {
       return target
         .map((t) => {
@@ -211,6 +217,7 @@ export function transformEnhancedApiData(
             type: "smoothstep",
             style: edgeStyle,
             markerEnd: marker,
+            data: { systemId },
           }
         })
         .filter((edge): edge is NonNullable<typeof edge> => edge !== null)
@@ -231,6 +238,7 @@ export function transformEnhancedApiData(
           type: "smoothstep",
           style: edgeStyle,
           markerEnd: marker,
+          data: { systemId },
         },
       ]
     }
