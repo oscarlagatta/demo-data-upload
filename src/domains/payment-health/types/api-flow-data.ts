@@ -40,6 +40,9 @@ export interface SystemConnection {
   source: string
   target: string | string[]
   systemId?: number
+  label?: string | null
+  sourceHandle?: string // Will be normalized to lowercase (right, left, top, bottom)
+  targetHandle?: string // Will be normalized to lowercase (right, left, top, bottom)
 }
 
 export interface ProcessingSection {

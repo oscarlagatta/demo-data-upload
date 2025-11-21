@@ -105,6 +105,9 @@ interface SystemConnection {
   source: string
   target: string | string[]
   systemId?: number
+  label?: string | null
+  sourceHandle?: string
+  targetHandle?: string
 }
 
 /**
@@ -196,58 +199,104 @@ export function transformEnhancedApiData(
     })
     .filter((n): n is AppNode => n !== null)
 
-  const edgeSet = new Set<string>()
-  const transformedEdges = apiData.systemConnections.flatMap((connection: SystemConnection) => {
-    const { source, target, systemId } = connection
+  const detailedConnections: DetailedConnection[] = []
+
+  apiData.systemConnections.forEach((connection: SystemConnection) => {
+    const { source, target, systemId, label, sourceHandle, targetHandle } = connection
+
+    // Normalize handles to lowercase for consistent matching
+    const normalizedSourceHandle = normalizeHandle(sourceHandle)
+    const normalizedTargetHandle = normalizeHandle(targetHandle)
+
     if (Array.isArray(target)) {
-      return target
-        .map((t) => {
-          const edgeId = `${source}-${t}`
-          const reverseEdgeId = `${t}-${source}`
-
-          if (edgeSet.has(reverseEdgeId)) {
-            return null
-          }
-
-          edgeSet.add(edgeId)
-          return {
-            id: edgeId,
-            source,
-            target: t,
-            type: "smoothstep",
-            style: edgeStyle,
-            markerEnd: marker,
-            data: { systemId },
-          }
+      // Handle multiple targets from a single source
+      target.forEach((t) => {
+        detailedConnections.push({
+          id: `${source}-${t}`,
+          sourceNodeId: source,
+          targetNodeId: t,
+          sourceHandle: normalizedSourceHandle,
+          targetHandle: normalizedTargetHandle,
+          systemId,
+          label,
         })
-        .filter((edge): edge is NonNullable<typeof edge> => edge !== null)
+      })
     } else {
-      const edgeId = `${source}-${target}`
-      const reverseEdgeId = `${target}-${source}`
-
-      if (edgeSet.has(reverseEdgeId)) {
-        return []
-      }
-
-      edgeSet.add(edgeId)
-      return [
-        {
-          id: edgeId,
-          source,
-          target: target as string,
-          type: "smoothstep",
-          style: edgeStyle,
-          markerEnd: marker,
-          data: { systemId },
-        },
-      ]
+      // Single target connection
+      detailedConnections.push({
+        id: `${source}-${target}`,
+        sourceNodeId: source,
+        targetNodeId: target,
+        sourceHandle: normalizedSourceHandle,
+        targetHandle: normalizedTargetHandle,
+        systemId,
+        label,
+      })
     }
   })
+
+  const edgeSet = new Set<string>()
+  const transformedEdges = detailedConnections
+    .map((connection) => {
+      const { id, sourceNodeId, targetNodeId, sourceHandle, targetHandle, systemId, label } = connection
+
+      // Check for duplicate or reverse edges
+      const reverseEdgeId = `${targetNodeId}-${sourceNodeId}`
+
+      if (edgeSet.has(reverseEdgeId)) {
+        console.log(`[v0] Skipping duplicate edge: ${id} (reverse exists: ${reverseEdgeId})`)
+        return null
+      }
+
+      edgeSet.add(id)
+
+      console.log(`[v0] Creating edge: ${id} with handles ${sourceHandle} -> ${targetHandle}`)
+
+      return {
+        id,
+        source: sourceNodeId,
+        target: targetNodeId,
+        sourceHandle, // Normalized to lowercase
+        targetHandle, // Normalized to lowercase
+        type: "smoothstep",
+        style: edgeStyle,
+        markerEnd: marker,
+        data: {
+          systemId,
+          label,
+          sourceNodeId,
+          targetNodeId,
+          sourceHandle, // Include in data for reference
+          targetHandle, // Include in data for reference
+        },
+      }
+    })
+    .filter((edge): edge is NonNullable<typeof edge> => edge !== null)
 
   return {
     nodes: [...backgroundNodes, ...transformedNodes],
     edges: transformedEdges,
   }
+}
+
+// Normalizes handle position strings to lowercase for consistent matching
+// Handles variations like "Right" -> "right", "Left" -> "left", etc.
+function normalizeHandle(handle: string | undefined): string {
+  if (!handle) return "right" // Default to right if not specified
+  return handle.toLowerCase()
+}
+
+/**
+ * Creates a detailed connection object with normalized handles and node references
+ */
+interface DetailedConnection {
+  id: string
+  sourceNodeId: string
+  targetNodeId: string
+  sourceHandle: string
+  targetHandle: string
+  systemId?: number
+  label?: string | null
 }
 
 export function getCategoryParentId(category: string | undefined): string | null {
